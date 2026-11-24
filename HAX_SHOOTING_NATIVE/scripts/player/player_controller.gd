@@ -621,6 +621,25 @@ func heal(amount: float) -> void:
     health = minf(max_health, health + amount)
     health_changed.emit(health, armor)
 
+func add_ammo(amount: int) -> void:
+    if weapon_data.is_empty():
+        return
+    var ammo: Dictionary = ammo_by_weapon.get(str(weapon_data.id),{"mag":0,"reserve":0})
+    ammo.reserve = int(ammo.reserve) + maxi(0,amount)
+    ammo_by_weapon[str(weapon_data.id)] = ammo
+    _emit_ammo()
+
+func add_armor(amount: float) -> void:
+    armor = minf(100.0,armor + maxf(0.0,amount))
+    health_changed.emit(health,armor)
+
+func add_weapon_pickup(index: int) -> void:
+    equip_weapon(clampi(index,0,GameData.WEAPONS.size()-1))
+    var ammo: Dictionary = ammo_by_weapon.get(str(weapon_data.id),{"mag":0,"reserve":0})
+    ammo.reserve = maxi(int(ammo.reserve),int(weapon_data.reserve))
+    ammo_by_weapon[str(weapon_data.id)] = ammo
+    _emit_ammo()
+
 func set_crouch(value: bool) -> void:
     crouching = value
 
