@@ -14,9 +14,9 @@ signal shot_fired(weapon_id: String, hit: bool, headshot: bool)
 @export_range(2.0, 22.0, 0.5) var aim_assist_cone := 13.0
 
 const GRAVITY := 24.0
-const HIP_CAMERA_DISTANCE := 4.8
+const HIP_CAMERA_DISTANCE := 5.4
 const AIM_CAMERA_DISTANCE := 2.65
-const HIP_FOV := 74.0
+const HIP_FOV := 69.0
 const AIM_FOV := 57.0
 
 var max_health := 100.0
@@ -24,6 +24,7 @@ var health := 100.0
 var armor := 75.0
 var is_dead := false
 var controls_enabled := false
+var lobby_showcase := false
 var current_weapon_index := 0
 var current_operator_skin := "nacar_shadow"
 var current_weapon_skin := "blackout"
@@ -323,10 +324,23 @@ func _update_camera_pose(delta: float, aiming: bool) -> void:
     _camera_pivot.rotation = Vector3(_pitch, _camera_yaw, 0.0)
     _spring_arm.rotation.y = PI
     _camera.rotation.y = PI
+    var desired_distance := 6.2 if lobby_showcase else (AIM_CAMERA_DISTANCE if aiming else HIP_CAMERA_DISTANCE)
+    var desired_fov := 64.0 if lobby_showcase else (AIM_FOV if aiming else HIP_FOV)
     _camera_pivot.position.x = lerpf(_camera_pivot.position.x, 0.58 if aiming else 0.0, delta * 8.0)
-    _spring_arm.spring_length = lerpf(_spring_arm.spring_length, AIM_CAMERA_DISTANCE if aiming else HIP_CAMERA_DISTANCE, delta * 7.0)
+    _spring_arm.spring_length = lerpf(_spring_arm.spring_length, desired_distance, delta * 7.0)
     _camera.position.x = lerpf(_camera.position.x, 0.54 if aiming else 0.42, delta * 8.0)
-    _camera.fov = lerpf(_camera.fov, AIM_FOV if aiming else HIP_FOV, delta * 6.5)
+    _camera.fov = lerpf(_camera.fov, desired_fov, delta * 6.5)
+
+func set_lobby_showcase(enabled: bool) -> void:
+    lobby_showcase = enabled
+    controls_enabled = false
+    fire_held = false
+    aim_held = false
+    _camera_yaw = 0.0
+    _pitch = deg_to_rad(-5.0)
+    rotation.y = PI if enabled else 0.0
+    _camera_pivot.rotation = Vector3(_pitch,_camera_yaw,0.0)
+    _update_camera_pose(1.0,false)
 
 func _update_character_animation(delta: float, moving: bool, running: bool, aiming: bool) -> void:
     var cadence := 11.5 if running else 8.0
@@ -350,6 +364,7 @@ func _update_character_animation(delta: float, moving: bool, running: bool, aimi
         _weapon_mount.position.y = lerpf(_weapon_mount.position.y, 1.30 + (0.02 if moving else 0.0) + (0.02 if aiming else 0.0), delta * 12.0)
 
 func configure_for_match() -> void:
+    lobby_showcase = false
     health = max_health
     armor = 75.0
     is_dead = false
