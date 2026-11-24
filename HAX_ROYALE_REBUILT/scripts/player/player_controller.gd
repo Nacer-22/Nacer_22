@@ -442,7 +442,7 @@ func _build_weapon_visual() -> void:
 func _apply_weapon_model_tint(node: Node, tint: Color) -> void:
     if node is MeshInstance3D and node.mesh != null:
         for surface in range(node.mesh.get_surface_count()):
-            var source := node.get_active_material(surface)
+            var source: Material = node.get_active_material(surface) as Material
             var material := StandardMaterial3D.new()
             if source is StandardMaterial3D:
                 material = source.duplicate() as StandardMaterial3D
