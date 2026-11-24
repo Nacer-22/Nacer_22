@@ -269,6 +269,15 @@ func _on_menu_action(action: String) -> void:
         "operators": _show_operators()
         "store": _show_store()
         "settings": _show_settings()
+        "battle_royale":
+            selected_mode = "battle_royale"
+            selected_map = "island"
+            start_requested.emit(selected_mode,selected_map)
+        "zombies":
+            selected_mode = "zombies"
+            selected_map = "red_harbor"
+            start_requested.emit(selected_mode,selected_map)
+        "exit": get_tree().quit()
 
 func _new_page(title: String, subtitle := "") -> VBoxContainer:
     page = title.to_lower().replace(" ","_")
