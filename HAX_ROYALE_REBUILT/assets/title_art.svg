@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900">
+<defs>
+ <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#060a14"/><stop offset=".48" stop-color="#172338"/><stop offset="1" stop-color="#4a162b"/></linearGradient>
+ <linearGradient id="ground" x2="0" y2="1"><stop stop-color="#202a37"/><stop offset="1" stop-color="#070a12"/></linearGradient>
+ <linearGradient id="armor" x2="0" y2="1"><stop stop-color="#566174"/><stop offset=".42" stop-color="#252f3d"/><stop offset="1" stop-color="#0a101a"/></linearGradient>
+ <linearGradient id="red" x2="1" y2="0"><stop stop-color="#7b0d28"/><stop offset=".55" stop-color="#f12950"/><stop offset="1" stop-color="#ff8191"/></linearGradient>
+ <radialGradient id="moon"><stop stop-color="#ff8e8b" stop-opacity=".55"/><stop offset="1" stop-color="#ff284c" stop-opacity="0"/></radialGradient>
+ <linearGradient id="glass" x2="0" y2="1"><stop stop-color="#ff4764"/><stop offset="1" stop-color="#3e0716"/></linearGradient>
+</defs>
+<rect width="1600" height="900" fill="url(#sky)"/>
+<circle cx="1250" cy="175" r="260" fill="url(#moon)"/>
+<circle cx="1250" cy="175" r="74" fill="#e0d6d3" opacity=".72"/>
+<circle cx="1250" cy="175" r="65" fill="#aeb8c8" opacity=".28"/>
+<g fill="#0b111d" stroke="#29384b" stroke-width="8">
+ <path d="M600 388V150h135v238z"/><path d="M760 390V95h62v295z"/><path d="M850 385V205h175v180z"/>
+ <path d="M1040 415V140h130v275z"/><path d="M1185 400V230h120v170z"/><path d="M1350 420V180h165v240z"/>
+ <path d="M92 490V340h120v150z"/><path d="M238 510V395h160v115z"/>
+</g>
+<g fill="#d52143" opacity=".82">
+ <rect x="623" y="205" width="88" height="7"/><rect x="774" y="165" width="36" height="7"/><rect x="877" y="250" width="115" height="8"/>
+ <rect x="1062" y="210" width="85" height="7"/><rect x="1370" y="246" width="120" height="8"/>
+ <rect x="114" y="396" width="76" height="7"/><rect x="260" y="444" width="110" height="7"/>
+</g>
+<g stroke="#758398" stroke-width="8" fill="none" opacity=".7">
+ <path d="M650 390V75h250v315M900 75v315M640 95h280"/>
+ <path d="M1060 410V72h52v338M1080 72h290M1335 72v338"/>
+ <path d="M60 495V230h8V495"/>
+</g>
+<g transform="translate(1080 95)" fill="#0b121e" stroke="#8290a2" stroke-width="8" opacity=".94">
+ <path d="M-90 36q48-52 126-43l100 33 35 35-20 15-73-21-76 5-72 17-35-14z"/>
+ <path d="M-38 10 8-55h20l14 74M42 4l74-38 14 13-61 47"/>
+ <path d="M-120 48h290" stroke="#d92a4b" stroke-width="5"/>
+</g>
+<g fill="#111923" stroke="#536071" stroke-width="10">
+ <path d="M70 620h240v120H70z"/><path d="M335 650h180v95H335z"/>
+ <path d="M580 610h190v145H580z"/><path d="M800 645h205v110H800z"/>
+ <path d="M1110 610h190v135h-190z"/><path d="M1330 650h230v95h-230z"/>
+</g>
+<g fill="#bd1839" opacity=".75">
+ <rect x="95" y="672" width="190" height="10"/><rect x="361" y="682" width="135" height="8"/>
+ <rect x="610" y="680" width="145" height="10"/><rect x="830" y="690" width="150" height="8"/>
+ <rect x="1140" y="677" width="125" height="9"/><rect x="1360" y="686" width="172" height="9"/>
+</g>
+<path d="M0 735h1600v165H0z" fill="url(#ground)"/>
+<g stroke="#ed244c" stroke-width="5" opacity=".78"><path d="M0 770h1600M0 830h1600"/></g>
+<g fill="#080e18" stroke="#657184" stroke-width="12">
+ <!-- operator helmet and head -->
+ <path d="M1120 280q40-102 163-116 132 9 153 130l-22 140-45 65h-185l-68-92z"/>
+ <path d="M1154 289q40-95 130-102 99 2 120 110l-9 71h-250z" fill="#0a101b"/>
+ <path d="M1148 345h265l-8 48h-248z" fill="url(#glass)" stroke="#e32b4f" stroke-width="8"/>
+ <path d="M1214 411q63-39 134 0l30 65h-195z" fill="#111a26"/>
+ <!-- shoulders / chest armor -->
+ <path d="M1080 456q83-64 160-44l75 38 90-12q83 31 112 118l-20 190h-440l-30-157z"/>
+ <path d="M1134 485 1260 450l120 38-25 170h-190z" fill="#1a2432"/>
+ <path d="M1155 507h190l-8 86h-170z" fill="#222d3b" stroke="#8795a5" stroke-width="5"/>
+ <path d="M1194 525h125v34h-125z" fill="#b91d3f" stroke="#ff4968" stroke-width="4"/>
+ <path d="M1080 494 1022 660l85 48 90-150-28-80z"/>
+ <path d="M1440 486 1518 650l-86 58-92-146 24-80z"/>
+ <!-- arms and gloves -->
+ <path d="M1050 570 1010 700l57 38 81-122-29-54z"/>
+ <path d="M1490 570 1535 708l-54 36-83-124 29-52z"/>
+ <!-- legs -->
+ <path d="M1140 735h175l-34 165h-122z"/>
+ <path d="M1327 735h152l51 165h-123z"/>
+</g>
+<g fill="#0b111b" stroke="#7c8798" stroke-width="8">
+ <path d="M1042 695 1210 682l-62 88-158-24z"/>
+ <path d="M1365 690 1506 702l44 64-164 15z"/>
+</g>
+<!-- rifle held across chest -->
+<g transform="translate(1100 560) rotate(25)">
+ <path d="M-22 0h385v28H-22z" fill="#111823" stroke="#6f7d8d" stroke-width="8"/>
+ <path d="M230 -8h185v44H230z" fill="#222e3c" stroke="#8b95a4" stroke-width="6"/>
+ <path d="M-50 -18h118v62H-50z" fill="#171e29" stroke="#8c96a4" stroke-width="6"/>
+ <path d="M78 0v112h30V0z" fill="#0b1018" stroke="#687586" stroke-width="6"/>
+ <path d="M310 -12v52h34v-52z" fill="#0b1018" stroke="#687586" stroke-width="5"/>
+ <path d="M-12 -4h300" stroke="#da2446" stroke-width="7"/>
+ <circle cx="288" cy="12" r="8" fill="#f23a5a"/>
+</g>
+<g fill="#ff3155">
+ <circle cx="982" cy="280" r="6"/><circle cx="1515" cy="302" r="7"/><circle cx="905" cy="510" r="4"/>
+ <circle cx="1170" cy="213" r="5"/><circle cx="1465" cy="478" r="5"/><circle cx="780" cy="600" r="4"/>
+</g>
+<g fill="#ff7b91" opacity=".35"><path d="M850 740q100-90 190 0 80-35 170 0H850z"/><path d="M1180 735q110-120 240 0h-240z"/></g>
+<!-- cinematic left-side negative space vignette -->
+<rect width="630" height="900" fill="#050912" opacity=".43"/>
+<path d="M620 0h25v900h-25z" fill="#f02a4e" opacity=".18"/>
+</svg>
