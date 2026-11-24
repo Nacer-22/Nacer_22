@@ -572,7 +572,7 @@ func _update_battle_royale(delta: float) -> void:
         _supply_drop_spawned = true
         _spawn_supply_drop()
     if _zone_elapsed > 24.0 and _zone_radius > 18.0:
-        var phase := floor((_zone_elapsed - 24.0) / 22.0)
+        var phase: float = floor((_zone_elapsed - 24.0) / 22.0)
         var target_radius := maxf(18.0, 116.0 - phase * 14.0)
         if target_radius < _zone_radius:
             _zone_radius = target_radius
