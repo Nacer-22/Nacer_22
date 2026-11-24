@@ -30,11 +30,16 @@ jobs:
       - name: Validate remaster patcher syntax
         run: python -m py_compile HAX_SHOOTING_NATIVE/tools/remaster_fps.py
       - name: Apply HAX SHOOTING mobile remaster
+        shell: bash
         run: |
           python HAX_SHOOTING_NATIVE/tools/remaster_fps.py --project "$RUNNER_TEMP/fps-template"
-          test -s "$RUNNER_TEMP/fps-template/hax/menu_art.svg"
-          test -s "$RUNNER_TEMP/fps-template/hax/hax_mobile_controls.gd"
-          test -s "$RUNNER_TEMP/fps-template/weapons/assualt_rifle.tscn"
+          echo "Generated HAX files:"
+          find "$RUNNER_TEMP/fps-template/hax" -maxdepth 1 -type f -printf '%f %s bytes\\n'
+          echo "FPS weapon scene files:"
+          ls -lah "$RUNNER_TEMP/fps-template/weapons/"
+          test -s "$RUNNER_TEMP/fps-template/hax/menu_art.svg" || { echo "Missing HAX menu art"; exit 1; }
+          test -s "$RUNNER_TEMP/fps-template/hax/hax_mobile_controls.gd" || { echo "Missing HAX mobile controls"; exit 1; }
+          test -s "$RUNNER_TEMP/fps-template/weapons/assualt_rifle.tscn" || { echo "Missing assault rifle scene"; exit 1; }
       - name: Install Android SDK components
         uses: android-actions/setup-android@v4
         with:
