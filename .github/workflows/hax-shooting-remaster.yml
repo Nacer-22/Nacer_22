@@ -1,0 +1,121 @@
+name: HAX SHOOTING FPS Remaster Android APK
+on:
+  push:
+    branches: [hax-shooting-remaster]
+    paths:
+      - 'HAX_SHOOTING_NATIVE/tools/remaster_fps.py'
+      - '.github/workflows/hax-shooting-remaster.yml'
+  workflow_dispatch:
+jobs:
+  build-android:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Download pinned FPS template source
+        shell: bash
+        run: |
+          git clone --depth 1 https://github.com/bukkbeek/GodotFPS-Template.git "$RUNNER_TEMP/fps-template"
+          cd "$RUNNER_TEMP/fps-template"
+          git fetch --depth 1 origin 11619794d644e7933f87caa6099f3acc1f085f5d
+          git checkout --detach 11619794d644e7933f87caa6099f3acc1f085f5d
+          echo "FPS_TEMPLATE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Apply HAX SHOOTING mobile remaster
+        run: |
+          python HAX_SHOOTING_NATIVE/tools/remaster_fps.py --project "$RUNNER_TEMP/fps-template"
+          test -s "$RUNNER_TEMP/fps-template/hax/menu_art.svg"
+          test -s "$RUNNER_TEMP/fps-template/hax/hax_mobile_controls.gd"
+          test -s "$RUNNER_TEMP/fps-template/weapons/assualt_rifle.tscn"
+      - name: Install Android SDK components
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools'
+      - name: Install Android packages
+        shell: bash
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager --install "platform-tools" "platforms;android-35" "build-tools;35.0.1" "ndk;28.1.13356709"
+          echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> "$GITHUB_ENV"
+      - name: Download Godot 4.7.2 editor
+        shell: bash
+        run: |
+          curl -fL --retry 3 "https://downloads.godotengine.org/?flavor=stable&platform=linux.64&slug=linux.x86_64.zip&version=4.7.2" -o godot.zip
+          mkdir -p "$RUNNER_TEMP/godot"
+          unzip -q godot.zip -d "$RUNNER_TEMP/godot"
+          chmod +x "$RUNNER_TEMP/godot/Godot_v4.7.2-stable_linux.x86_64"
+          ln -sf "$RUNNER_TEMP/godot/Godot_v4.7.2-stable_linux.x86_64" "$RUNNER_TEMP/godot/godot"
+          echo "$RUNNER_TEMP/godot" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/godot/Godot_v4.7.2-stable_linux.x86_64" --version
+      - name: Install Android-only Godot export templates
+        shell: bash
+        run: |
+          python -m pip install --no-cache-dir remotezip
+          python - <<'PY'
+          from pathlib import Path
+          from remotezip import RemoteZip
+          url = "https://downloads.godotengine.org/?flavor=stable&platform=templates&slug=export_templates.tpz&version=4.7.2"
+          dest = Path.home() / ".local/share/godot/export_templates/4.7.2.stable"
+          dest.mkdir(parents=True, exist_ok=True)
+          wanted = {"android_debug.apk", "android_release.apk", "version.txt"}
+          found = set()
+          with RemoteZip(url, timeout=180) as archive:
+              for name in archive.namelist():
+                  base = Path(name).name
+                  if base in wanted and base not in found:
+                      data = archive.read(name)
+                      if not data:
+                          raise RuntimeError("empty template: " + name)
+                      (dest / base).write_bytes(data)
+                      found.add(base)
+                      print("Fetched", name, len(data))
+          if found != wanted:
+              raise RuntimeError("Missing Android templates: " + str(wanted-found))
+          PY
+          ls -lh "$HOME/.local/share/godot/export_templates/4.7.2.stable"
+      - name: Import patched FPS project
+        working-directory: ${{ runner.temp }}/fps-template
+        run: godot --headless --editor --path . --import --quit
+      - name: Headless startup smoke test
+        working-directory: ${{ runner.temp }}/fps-template
+        run: godot --headless --path . --quit-after 10
+      - name: Export unsigned Android APK
+        working-directory: ${{ runner.temp }}/fps-template
+        run: |
+          mkdir -p build
+          godot --headless --path . --export-debug "Android APK" build/HAX_SHOOTING_unsigned.apk
+          test -s build/HAX_SHOOTING_unsigned.apk
+      - name: Sign and verify APK with temporary test key
+        working-directory: ${{ runner.temp }}/fps-template
+        shell: bash
+        run: |
+          keytool -genkeypair -noprompt -v -keystore "$RUNNER_TEMP/hax-test.keystore" -storepass android -alias haxshooting -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=HAX SHOOTING, OU=NACAR, O=NACAR, L=Alger, S=Algeria, C=DZ"
+          ZIPALIGN="$ANDROID_HOME/build-tools/35.0.1/zipalign"
+          APKSIGNER="$ANDROID_HOME/build-tools/35.0.1/apksigner"
+          "$ZIPALIGN" -f -p 4 build/HAX_SHOOTING_unsigned.apk build/HAX_SHOOTING_aligned.apk
+          "$APKSIGNER" sign --ks "$RUNNER_TEMP/hax-test.keystore" --ks-key-alias haxshooting --ks-pass pass:android --key-pass pass:android --out build/HAX_SHOOTING.apk build/HAX_SHOOTING_aligned.apk
+          "$APKSIGNER" verify --verbose build/HAX_SHOOTING.apk
+          sha256sum build/HAX_SHOOTING.apk | tee build/SHA256SUMS.txt
+          printf "HAX SHOOTING — BY: NACAR_22\nGodot 4.7.2\nBase template commit: %s\nSigned with a temporary test key. Replace with a private release key before distribution.\n" "$FPS_TEMPLATE_SHA" > build/BUILD_INFO.txt
+      - name: Package patched source project
+        working-directory: ${{ runner.temp }}/fps-template
+        run: |
+          zip -qr build/HAX_SHOOTING_SOURCE.zip . -x ".godot/*" "build/*" ".git/*"
+          test -s build/HAX_SHOOTING_SOURCE.zip
+      - name: Upload HAX SHOOTING APK and source
+        uses: actions/upload-artifact@v4
+        with:
+          name: HAX-SHOOTING-FPS-REMASTER
+          path: |
+            ${{ runner.temp }}/fps-template/build/HAX_SHOOTING.apk
+            ${{ runner.temp }}/fps-template/build/HAX_SHOOTING_SOURCE.zip
+            ${{ runner.temp }}/fps-template/build/SHA256SUMS.txt
+            ${{ runner.temp }}/fps-template/build/BUILD_INFO.txt
+          if-no-files-found: error
+          retention-days: 30
