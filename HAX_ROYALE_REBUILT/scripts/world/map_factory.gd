@@ -197,6 +197,7 @@ func _add_tree(pos: Vector3, scale_value: float) -> void:
     trunk_shape.position.y = 1.6
     trunk_body.add_child(trunk_shape)
     tree.add_child(trunk_body)
+    obstacles.append({"center":pos+Vector3(0,1.6,0),"size":Vector3(0.65,3.2,0.65)})
     for i in range(3):
         var leaves := MeshInstance3D.new()
         var cone := ConeMesh.new()
