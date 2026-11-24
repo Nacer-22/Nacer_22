@@ -14,11 +14,18 @@ signal mobile_fire_changed(value: bool)
 signal mobile_aim_changed(value: bool)
 
 var page := "main"
-var selected_mode := "tdm"
-var selected_map := "red_harbor"
+var selected_mode := "battle_royale"
+var selected_map := "island"
 var credits := 5800
 var diamonds := 420
-var player_level := 18
+var player_level := 1
+var rank_points := 0
+var season_xp := 0
+var _zone_label: Label
+var _rank_value: Label
+var _rank_bar: ProgressBar
+var _result_panel: PanelContainer
+var _squad_size := "SOLO"
 var _root: Control
 var _main_menu: Control
 var _hud: Control
@@ -42,6 +49,9 @@ func _ready() -> void:
     process_mode = Node.PROCESS_MODE_ALWAYS
     _profile.load("user://hax_profile.cfg")
     credits = int(_profile.get_value("profile","credits",credits))
+    rank_points = int(_profile.get_value("profile","rank_points",rank_points))
+    season_xp = int(_profile.get_value("profile","season_xp",season_xp))
+    player_level = int(_profile.get_value("profile","level",player_level))
     _owned_operator_skins = _profile.get_value("inventory","operators",_owned_operator_skins)
     _owned_weapon_skins = _profile.get_value("inventory","weapons",_owned_weapon_skins)
     _selected_operator_skin = str(_profile.get_value("inventory","selected_operator",_selected_operator_skin))
@@ -56,6 +66,9 @@ func _ready() -> void:
 
 func save_profile() -> void:
     _profile.set_value("profile","credits",credits)
+    _profile.set_value("profile","rank_points",rank_points)
+    _profile.set_value("profile","season_xp",season_xp)
+    _profile.set_value("profile","level",player_level)
     _profile.set_value("inventory","operators",_owned_operator_skins)
     _profile.set_value("inventory","weapons",_owned_weapon_skins)
     _profile.set_value("inventory","selected_operator",_selected_operator_skin)
