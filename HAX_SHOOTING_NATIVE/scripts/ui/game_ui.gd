@@ -82,6 +82,31 @@ func _clear_page() -> void:
         _main_menu.queue_free()
     _main_menu = null
 
+
+func _rank_name() -> String:
+    if rank_points >= 3200:
+        return "HEROIC"
+    if rank_points >= 2300:
+        return "DIAMOND"
+    if rank_points >= 1600:
+        return "PLATINUM"
+    if rank_points >= 1000:
+        return "GOLD"
+    if rank_points >= 500:
+        return "SILVER"
+    return "BRONZE"
+
+func add_rank_points(points: int) -> void:
+    rank_points = clampi(rank_points + points,0,5000)
+    season_xp = maxi(0,season_xp + maxi(0,points) * 3)
+    credits = maxi(0,credits + maxi(0,points) * 2)
+    player_level = maxi(1,1 + int(season_xp / 500))
+    save_profile()
+    if is_instance_valid(_rank_value):
+        _rank_value.text = "%s  •  LV %02d  •  %d RP" % [_rank_name(),player_level,rank_points]
+    if is_instance_valid(_rank_bar):
+        _rank_bar.value = posmod(rank_points,500)
+
 func _build_main_menu() -> void:
     page = "main"
     _clear_page()
