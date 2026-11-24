@@ -223,6 +223,126 @@ def create_hax_ui(root: pathlib.Path) -> None:
       <g fill="#ff3557"><circle cx="1540" cy="212" r="14"/><circle cx="1810" cy="230" r="11"/><circle cx="1130" cy="280" r="8"/></g>
     </svg>
     ''')
+    write(hax / "hax_mobile_controls.gd", r'''
+    extends Control
+
+    signal pause_requested
+    var player: Node3D
+    var stick_id := -1
+    var look_id := -1
+    var action_touches: Dictionary = {}
+    var stick_center := Vector2.ZERO
+    var stick_value := Vector2.ZERO
+    var _size := Vector2.ZERO
+    const STICK_RADIUS := 78.0
+    const BUTTONS := {
+      "fire": Vector2(0.905, 0.805),
+      "aim_mode": Vector2(0.785, 0.835),
+      "reload": Vector2(0.895, 0.59),
+      "jump": Vector2(0.745, 0.61),
+      "sprint": Vector2(0.12, 0.72),
+      "weapon_change_next": Vector2(0.91, 0.43)
+    }
+    const LABELS := {"fire":"FIRE","aim_mode":"AIM","reload":"RELOAD","jump":"JUMP","sprint":"RUN","weapon_change_next":"SWAP"}
+
+    func _ready() -> void:
+      set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+      mouse_filter = Control.MOUSE_FILTER_IGNORE
+      process_mode = Node.PROCESS_MODE_ALWAYS
+      _size = get_viewport_rect().size
+      stick_center = Vector2(155, _size.y - 160)
+      queue_redraw()
+
+    func set_player(value: Node3D) -> void:
+      player = value
+      _size = get_viewport_rect().size
+      stick_center = Vector2(155, _size.y - 160)
+      queue_redraw()
+
+    func _process(_delta: float) -> void:
+      var current_size := get_viewport_rect().size
+      if current_size != _size:
+        _size = current_size
+        stick_center = Vector2(155, _size.y - 160)
+      queue_redraw()
+
+    func _input(event: InputEvent) -> void:
+      if player == null:
+        return
+      if event is InputEventScreenTouch:
+        if event.pressed:
+          _touch_down(event.index, event.position)
+        else:
+          _touch_up(event.index)
+      elif event is InputEventScreenDrag:
+        if event.index == stick_id:
+          var delta: Vector2 = event.position - stick_center
+          stick_value = (delta / STICK_RADIUS).limit_length(1.0)
+          player.mobile_move_vector = stick_value
+          queue_redraw()
+        elif event.index == look_id:
+          player.apply_touch_look(event.relative)
+
+    func _touch_down(index: int, pos: Vector2) -> void:
+      if pos.x < _size.x * 0.36 and pos.y > _size.y * 0.48 and stick_id == -1:
+        stick_id = index
+        var delta := (pos - stick_center) / STICK_RADIUS
+        stick_value = delta.limit_length(1.0)
+        player.mobile_move_vector = stick_value
+        queue_redraw()
+        return
+      if _inside(pos, Vector2(_size.x - 78, 72), 48):
+        pause_requested.emit()
+        return
+      for action in BUTTONS:
+        var center: Vector2 = _size * BUTTONS[action]
+        var radius := 56.0 if action == "fire" else 40.0
+        if _inside(pos, center, radius):
+          action_touches[index] = action
+          Input.action_press(action)
+          return
+      if pos.x > _size.x * 0.39 and look_id == -1:
+        look_id = index
+
+    func _touch_up(index: int) -> void:
+      if index == stick_id:
+        stick_id = -1
+        stick_value = Vector2.ZERO
+        if player:
+          player.mobile_move_vector = Vector2.ZERO
+      if index == look_id:
+        look_id = -1
+      if action_touches.has(index):
+        Input.action_release(str(action_touches[index]))
+        action_touches.erase(index)
+      queue_redraw()
+
+    func _inside(point: Vector2, center: Vector2, radius: float) -> bool:
+      return point.distance_to(center) <= radius
+
+    func _draw() -> void:
+      if _size == Vector2.ZERO:
+        return
+      draw_circle(Vector2(_size.x - 78,72),48,Color(0.04,0.06,0.1,0.56))
+      draw_arc(Vector2(_size.x - 78,72),48,0,TAU,48,Color("#e5284a"),3.0,true)
+      _draw_text(Vector2(_size.x - 78,80),"Ⅱ",26,Color.WHITE)
+      draw_circle(stick_center,STICK_RADIUS,Color(0.05,0.07,0.1,0.28))
+      draw_arc(stick_center,STICK_RADIUS,0,TAU,64,Color(0.86,0.9,0.96,0.55),3.0,true)
+      draw_circle(stick_center + stick_value * 38.0,34,Color(0.78,0.82,0.88,0.46))
+      draw_arc(stick_center + stick_value * 38.0,34,0,TAU,40,Color("#f23a58"),2.0,true)
+      for action in BUTTONS:
+        var center: Vector2 = _size * BUTTONS[action]
+        var radius := 56.0 if action == "fire" else 40.0
+        var fill := Color(0.45,0.05,0.12,0.55) if action == "fire" else Color(0.04,0.06,0.1,0.5)
+        draw_circle(center,radius,fill)
+        draw_arc(center,radius,0,TAU,48,Color("#ed3655") if action == "fire" else Color(0.86,0.9,0.96,0.65),3.0,true)
+        _draw_text(center + Vector2(0,6),LABELS[action],14,Color.WHITE)
+
+    func _draw_text(center: Vector2, value: String, font_size: int, color: Color) -> void:
+      var font := ThemeDB.fallback_font
+      var width := font.get_string_size(value,HORIZONTAL_ALIGNMENT_LEFT,-1,font_size).x
+      draw_string(font,center + Vector2(-width/2,0),value,HORIZONTAL_ALIGNMENT_LEFT,-1,font_size,color)
+    ''')
     write(hax / "credits.md", """
     Game branding and integration: NACAR_22.
 
