@@ -250,8 +250,11 @@ func _choose_battle_target() -> void:
     if not is_instance_valid(player_owner) or player_owner.is_dead:
         target = null
         return
-    var best: Node3D = player_owner
-    var best_distance := global_position.distance_to(player_owner.global_position)
+    var best: Node3D = null
+    var best_distance := INF
+    if player_owner.team_id != team_id:
+        best = player_owner
+        best_distance = global_position.distance_to(player_owner.global_position)
     for other_node in get_tree().get_nodes_in_group("bots"):
         var other := other_node as CombatBot
         if other == null or other == self or other.is_dead:
