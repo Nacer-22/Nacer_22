@@ -543,31 +543,44 @@ func _build_hud() -> void:
     top.offset_bottom = 66
     _hud.add_child(top)
     _round_label = Label.new()
-    _round_label.text = "ROUND 01"
+    _round_label.text = "HAX ISLAND  •  BATTLE ROYALE"
     _round_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _round_label.add_theme_font_size_override("font_size",18)
+    _round_label.add_theme_color_override("font_color",Color("#fff0df"))
     top.add_child(_round_label)
     _score_label = Label.new()
-    _score_label.text = "KILLS 0 • DEATHS 0"
+    _score_label.text = "ELIMS 0  •  16 ALIVE"
     _score_label.add_theme_color_override("font_color",Color("#ff6074"))
+    _score_label.add_theme_font_size_override("font_size",17)
     top.add_child(_score_label)
     var pause := Button.new()
     pause.text = "Ⅱ"
-    pause.custom_minimum_size = Vector2(52,46)
+    pause.custom_minimum_size = Vector2(54,46)
     _style_button(pause)
     pause.pressed.connect(show_pause_menu)
     top.add_child(pause)
+
+    _zone_label = Label.new()
+    _zone_label.set_anchors_preset(Control.PRESET_TOP_WIDE)
+    _zone_label.offset_top = 75
+    _zone_label.offset_bottom = 106
+    _zone_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    _zone_label.add_theme_font_size_override("font_size",16)
+    _zone_label.add_theme_color_override("font_color",Color("#ff667d"))
+    _zone_label.text = "SAFE ZONE INITIALIZING"
+    _hud.add_child(_zone_label)
+
     _crosshair = Label.new()
-    _crosshair.text = "＋"
-    _crosshair.add_theme_font_size_override("font_size",32)
-    _crosshair.add_theme_color_override("font_color",Color("#55ff75"))
+    _crosshair.text = "·"
+    _crosshair.add_theme_font_size_override("font_size",26)
+    _crosshair.add_theme_color_override("font_color",Color("#ffffff"))
     _crosshair.set_anchors_preset(Control.PRESET_CENTER)
-    _crosshair.position = Vector2(-12,-18)
+    _crosshair.position = Vector2(-8,-16)
     _hud.add_child(_crosshair)
     var bottom := HBoxContainer.new()
     bottom.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
     bottom.offset_left = 26
-    bottom.offset_top = -86
+    bottom.offset_top = -88
     bottom.offset_right = -26
     bottom.offset_bottom = -18
     _hud.add_child(bottom)
@@ -580,12 +593,75 @@ func _build_hud() -> void:
     _ammo_label = Label.new()
     _ammo_label.text = "30 / 180"
     _ammo_label.add_theme_font_size_override("font_size",25)
+    _ammo_label.add_theme_color_override("font_color",Color("#ffffff"))
     bottom.add_child(_ammo_label)
     _feed = Label.new()
-    _feed.position = Vector2(24,90)
-    _feed.custom_minimum_size = Vector2(450,100)
+    _feed.position = Vector2(24,116)
+    _feed.custom_minimum_size = Vector2(490,130)
+    _feed.add_theme_font_size_override("font_size",14)
     _feed.add_theme_color_override("font_color",Color("#ffd3dc"))
     _hud.add_child(_feed)
+
+func update_battle_royale(radius: float, elapsed: float) -> void:
+    if not is_instance_valid(_zone_label):
+        return
+    var seconds_to_shrink := maxi(0,24 - int(elapsed))
+    if elapsed < 24.0:
+        _zone_label.text = "SAFE ZONE  •  RADIUS %.0f M  •  SHRINK IN %02d" % [radius,seconds_to_shrink]
+    else:
+        _zone_label.text = "STORM ACTIVE  •  SAFE RADIUS %.0f M" % radius
+
+func show_match_result(title_text: String, subtitle: String, kills: int, placement: String, rank_reward: int) -> void:
+    var overlay := ColorRect.new()
+    overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    overlay.color = Color(0.005,0.008,0.016,0.76)
+    overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+    _root.add_child(overlay)
+    _result_panel = PanelContainer.new()
+    _result_panel.set_anchors_preset(Control.PRESET_CENTER)
+    _result_panel.position = Vector2(-270,-230)
+    _result_panel.custom_minimum_size = Vector2(540,460)
+    var style := StyleBoxFlat.new()
+    style.bg_color = Color("#111a28")
+    style.border_color = Color("#e3294e")
+    style.set_border_width_all(2)
+    style.set_corner_radius_all(12)
+    style.content_margin_left = 28
+    style.content_margin_right = 28
+    style.content_margin_top = 24
+    style.content_margin_bottom = 24
+    _result_panel.add_theme_stylebox_override("panel",style)
+    overlay.add_child(_result_panel)
+    var stack := VBoxContainer.new()
+    stack.add_theme_constant_override("separation",16)
+    _result_panel.add_child(stack)
+    var title := Label.new()
+    title.text = title_text
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title.add_theme_font_size_override("font_size",38)
+    title.add_theme_color_override("font_color",Color("#ff536e"))
+    stack.add_child(title)
+    var sub := Label.new()
+    sub.text = subtitle
+    sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    sub.add_theme_font_size_override("font_size",17)
+    stack.add_child(sub)
+    var stats := Label.new()
+    stats.text = "PLACEMENT  %s\nELIMINATIONS  %d\nRANK POINTS  %+d" % [placement,kills,rank_reward]
+    stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    stats.add_theme_font_size_override("font_size",22)
+    stats.add_theme_color_override("font_color",Color("#f3e6d6"))
+    stack.add_child(stats)
+    var home := Button.new()
+    home.text = "RETURN TO HAX LOBBY"
+    home.custom_minimum_size.y = 58
+    _style_button(home,true)
+    home.pressed.connect(func():
+        if is_instance_valid(overlay):
+            overlay.queue_free()
+        show_main_menu()
+    )
+    stack.add_child(home)
 
 func update_hud(health: float, armor: float, ammo: int, reserve: int, round_no: int, kills: int, deaths: int, mode: String) -> void:
     if not is_instance_valid(_hud):
