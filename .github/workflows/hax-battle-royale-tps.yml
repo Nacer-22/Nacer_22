@@ -1,4 +1,5 @@
 name: HAX SHOOTING Third-Person Battle Royale Android
+# Build and validate the TPS battle royale project
 on:
   push:
     branches: [hax-battle-royale-tps]
