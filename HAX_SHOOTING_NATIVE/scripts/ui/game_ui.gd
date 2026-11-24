@@ -116,36 +116,45 @@ func _build_main_menu() -> void:
     _main_menu = root
     var bg := TextureRect.new()
     bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    var art_path := "res://assets/title_art.png" if ResourceLoader.exists("res://assets/title_art.png") else "res://assets/title_art.svg"
-    bg.texture = load(art_path)
+    bg.texture = load("res://assets/title_art.svg")
     bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
     bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
     root.add_child(bg)
     var shade := ColorRect.new()
     shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    shade.color = Color(0.008,0.01,0.02,0.10)
+    shade.color = Color(0.005,0.008,0.02,0.25)
     shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
     root.add_child(shade)
 
-    _add_hotspot(root,Rect2(0.025,0.505,0.285,0.075),"play","PLAY")
-    _add_hotspot(root,Rect2(0.025,0.585,0.285,0.071),"rooms","MULTIPLAYER")
-    _add_hotspot(root,Rect2(0.025,0.658,0.285,0.072),"battle_royale","BATTLE ROYALE")
-    _add_hotspot(root,Rect2(0.025,0.733,0.285,0.071),"zombies","ZOMBIE MODE")
-    _add_hotspot(root,Rect2(0.025,0.808,0.285,0.071),"settings","SETTINGS")
-    _add_hotspot(root,Rect2(0.025,0.883,0.285,0.071),"exit","EXIT")
-
-    var signature := Label.new()
-    signature.text = "NACAR_22  |  SEASON 01"
-    signature.position = Vector2(34,18)
-    signature.add_theme_font_size_override("font_size",17)
-    signature.add_theme_color_override("font_color",Color("#ffe0e5"))
-    root.add_child(signature)
+    var header := HBoxContainer.new()
+    header.position = Vector2(38,26)
+    header.custom_minimum_size = Vector2(570,84)
+    root.add_child(header)
+    var logo := TextureRect.new()
+    logo.custom_minimum_size = Vector2(72,72)
+    logo.texture = load("res://assets/hax_skull_logo.svg")
+    logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+    logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+    header.add_child(logo)
+    var brand := VBoxContainer.new()
+    brand.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    header.add_child(brand)
+    var title := Label.new()
+    title.text = "HAX SHOOTING"
+    title.add_theme_font_size_override("font_size",35)
+    title.add_theme_color_override("font_color",Color.WHITE)
+    brand.add_child(title)
+    var subtitle := Label.new()
+    subtitle.text = "BY: NACAR_22  •  SEASON 01  •  THIRD-PERSON BATTLE"
+    subtitle.add_theme_font_size_override("font_size",13)
+    subtitle.add_theme_color_override("font_color",Color("#ff7089"))
+    brand.add_child(subtitle)
 
     var rank_panel := PanelContainer.new()
-    rank_panel.anchor_left = 0.745
+    rank_panel.anchor_left = 0.75
     rank_panel.anchor_right = 0.985
     rank_panel.anchor_top = 0.025
-    rank_panel.anchor_bottom = 0.145
+    rank_panel.anchor_bottom = 0.155
     var panel_style := StyleBoxFlat.new()
     panel_style.bg_color = Color(0.025,0.035,0.055,0.82)
     panel_style.border_color = Color("#d92347")
@@ -158,9 +167,10 @@ func _build_main_menu() -> void:
     rank_panel.add_theme_stylebox_override("panel",panel_style)
     root.add_child(rank_panel)
     var rank_stack := VBoxContainer.new()
+    rank_stack.add_theme_constant_override("separation",2)
     rank_panel.add_child(rank_stack)
     _rank_value = Label.new()
-    _rank_value.text = "%s  |  LV %02d  |  %d RP" % [_rank_name(),player_level,rank_points]
+    _rank_value.text = "%s  •  LV %02d  •  %d RP" % [_rank_name(),player_level,rank_points]
     _rank_value.add_theme_font_size_override("font_size",16)
     _rank_value.add_theme_color_override("font_color",Color("#ffe2ad"))
     rank_stack.add_child(_rank_value)
@@ -171,31 +181,87 @@ func _build_main_menu() -> void:
     _rank_bar.show_percentage = false
     rank_stack.add_child(_rank_bar)
     var balance := Label.new()
-    balance.text = "CREDITS %d    DIAMONDS %d    XP %d" % [credits,diamonds,season_xp]
+    balance.text = "CREDITS %d   •   DIAMONDS %d   •   XP %d" % [credits,diamonds,season_xp]
     balance.add_theme_font_size_override("font_size",11)
     balance.add_theme_color_override("font_color",Color("#e2e7ef"))
     rank_stack.add_child(balance)
 
-    var side_actions := HBoxContainer.new()
-    side_actions.anchor_left = 0.72
-    side_actions.anchor_right = 0.985
-    side_actions.anchor_top = 0.16
-    side_actions.anchor_bottom = 0.22
-    root.add_child(side_actions)
-    _add_compact_action(side_actions,"ARMORY","armory")
-    _add_compact_action(side_actions,"OPERATORS","operators")
-    _add_compact_action(side_actions,"REWARDS","store")
+    var menu_panel := PanelContainer.new()
+    menu_panel.position = Vector2(42,145)
+    menu_panel.custom_minimum_size = Vector2(380,590)
+    var menu_style := StyleBoxFlat.new()
+    menu_style.bg_color = Color(0.018,0.025,0.04,0.86)
+    menu_style.border_color = Color("#b91d3c")
+    menu_style.set_border_width_all(2)
+    menu_style.set_corner_radius_all(9)
+    menu_style.content_margin_left = 18
+    menu_style.content_margin_right = 18
+    menu_style.content_margin_top = 17
+    menu_style.content_margin_bottom = 17
+    menu_panel.add_theme_stylebox_override("panel",menu_style)
+    root.add_child(menu_panel)
+    var menu_column := VBoxContainer.new()
+    menu_column.add_theme_constant_override("separation",8)
+    menu_panel.add_child(menu_column)
+    var section := Label.new()
+    section.text = "COMMAND CENTER  /  DEPLOYMENT"
+    section.add_theme_font_size_override("font_size",16)
+    section.add_theme_color_override("font_color",Color("#ff657c"))
+    menu_column.add_child(section)
+    _add_menu_button(menu_column,"▶   PLAY / SELECT MODE","play",true)
+    _add_menu_button(menu_column,"⚡   QUICK BATTLE ROYALE","battle_royale")
+    _add_menu_button(menu_column,"♟   MULTIPLAYER / SQUAD","rooms")
+    _add_menu_button(menu_column,"▣   ARMORY / LOADOUT","armory")
+    _add_menu_button(menu_column,"♜   OPERATORS / OUTFITS","operators")
+    _add_menu_button(menu_column,"◆   SEASON / REWARDS","store")
+    _add_menu_button(menu_column,"⚙   SETTINGS","settings")
+    _add_menu_button(menu_column,"⏻   EXIT GAME","exit")
+
+    var feature := PanelContainer.new()
+    feature.anchor_left = 0.75
+    feature.anchor_right = 0.985
+    feature.anchor_top = 0.76
+    feature.anchor_bottom = 0.94
+    var feature_style := StyleBoxFlat.new()
+    feature_style.bg_color = Color(0.02,0.03,0.05,0.82)
+    feature_style.border_color = Color("#ff3156")
+    feature_style.set_border_width_all(1)
+    feature_style.set_corner_radius_all(7)
+    feature_style.content_margin_left = 16
+    feature_style.content_margin_right = 16
+    feature_style.content_margin_top = 10
+    feature_style.content_margin_bottom = 10
+    feature.add_theme_stylebox_override("panel",feature_style)
+    root.add_child(feature)
+    var feature_stack := VBoxContainer.new()
+    feature.add_child(feature_stack)
+    var feature_title := Label.new()
+    feature_title.text = "FEATURED PLAYLIST"
+    feature_title.add_theme_font_size_override("font_size",13)
+    feature_title.add_theme_color_override("font_color",Color("#ff6980"))
+    feature_stack.add_child(feature_title)
+    var map_name := Label.new()
+    map_name.text = "HAX ISLAND  /  16 OPERATORS"
+    map_name.add_theme_font_size_override("font_size",19)
+    map_name.add_theme_color_override("font_color",Color.WHITE)
+    feature_stack.add_child(map_name)
+    var description := Label.new()
+    description.text = "DROP IN • LOOT UP • SURVIVE THE STORM"
+    description.add_theme_font_size_override("font_size",11)
+    description.add_theme_color_override("font_color",Color("#d4dbe6"))
+    feature_stack.add_child(description)
 
     var footer := Label.new()
-    footer.text = "HAX DIVISION  //  BUILD %s  //  THIRD-PERSON COMBAT" % GameData.VERSION
+    footer.text = "HAX DIVISION  //  BUILD %s  //  MOBILE THIRD-PERSON SHOOTER" % GameData.VERSION
     footer.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
     footer.offset_left = 24
-    footer.offset_top = -34
+    footer.offset_top = -32
     footer.offset_right = -24
     footer.offset_bottom = -8
-    footer.add_theme_font_size_override("font_size",12)
+    footer.add_theme_font_size_override("font_size",11)
     footer.add_theme_color_override("font_color",Color("#e0e4ea"))
     root.add_child(footer)
+
 
 func _add_hotspot(parent: Control, rect: Rect2, action: String, label_text: String) -> void:
     var button := Button.new()
