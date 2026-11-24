@@ -229,6 +229,7 @@ func _on_bot_eliminated(bot: Node,zone: String) -> void:
             ui.add_rank_points(260)
             ui.show_match_result("VICTORY ROYALE","LAST OPERATOR STANDING",kills,"1 / 16",260)
             _remove_safe_zone()
+            _clear_loot()
         else:
             ui.add_rank_points(35)
             ui.add_kill_feed("ROUND CLEARED — NEXT WAVE INCOMING")
@@ -253,6 +254,7 @@ func _on_player_killed() -> void:
         ui.add_rank_points(-35)
         ui.show_match_result("ELIMINATED","YOUR RUN HAS ENDED",kills,"TOP 16",-35)
         _remove_safe_zone()
+        _clear_loot()
         _respawn_pending = false
         return
     ui.add_kill_feed("YOU WERE ELIMINATED — REDEPLOYING")
@@ -495,6 +497,8 @@ func _stop_match() -> void:
     get_tree().paused = false
     player.set_controls_enabled(false)
     _clear_bots()
+    _clear_loot()
+    _remove_safe_zone()
     lobby.leave_room()
     lan.close_session()
     ui.show_main_menu()
