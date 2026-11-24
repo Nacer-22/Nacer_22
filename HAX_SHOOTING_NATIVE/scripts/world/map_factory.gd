@@ -13,7 +13,7 @@ func build_map(id: String) -> void:
     obstacles.clear()
     spawn_points.clear()
     _create_materials()
-    _add_box(Vector3(0,-0.65,0),Vector3(120,1.2,120),_materials.floor,false)
+    _add_box(Vector3(0,-0.65,0),Vector3(120,1.2,120),_materials.floor,true,false)
     _add_perimeter()
     match map_id:
         "dust_front": _build_dust()
@@ -155,7 +155,7 @@ func make_navigation_grid() -> AStarGrid2D:
                     grid.set_point_solid(cell,true)
     return grid
 
-func _add_box(pos: Vector3,size: Vector3,material: Material,solid := true) -> void:
+func _add_box(pos: Vector3,size: Vector3,material: Material,solid := true,nav_block := true) -> void:
     var body := StaticBody3D.new()
     body.position = pos
     body.collision_layer = 1
@@ -172,5 +172,6 @@ func _add_box(pos: Vector3,size: Vector3,material: Material,solid := true) -> vo
         box.size = size
         collision.shape = box
         body.add_child(collision)
-        obstacles.append({"center":pos,"size":size})
+        if nav_block:
+            obstacles.append({"center":pos,"size":size})
     add_child(body)
