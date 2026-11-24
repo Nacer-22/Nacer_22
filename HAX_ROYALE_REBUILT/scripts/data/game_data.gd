@@ -1,9 +1,9 @@
 class_name GameData
 extends RefCounted
 
-const BRAND := "HAX SHOOTING"
+const BRAND := "HAX SHOOTING ROYALE"
 const AUTHOR := "BY: NACAR_22"
-const VERSION := "0.3.0-alpha"
+const VERSION := "1.0.0"
 const WEAPONS: Array[Dictionary] = [
     {"id":"hax_ar", "name":"HAX-AR 74", "class":"ASSAULT", "damage":27.0, "head":3.2, "rpm":690.0, "mag":30, "reserve":180, "reload":2.1, "range":115.0, "spread":0.012, "recoil":0.75, "color":Color("#a30d22")},
     {"id":"viper_smg", "name":"VIPER SMG", "class":"SMG", "damage":20.0, "head":3.0, "rpm":920.0, "mag":36, "reserve":216, "reload":1.65, "range":62.0, "spread":0.022, "recoil":0.48, "color":Color("#df233b")},
