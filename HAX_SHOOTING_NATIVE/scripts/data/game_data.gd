@@ -18,12 +18,13 @@ const MODES: Array[Dictionary] = [
     {"id":"domination", "name":"DOMINATION", "players":"5 vs 5", "description":"Capture and hold three zones", "bots":8},
     {"id":"sniper", "name":"SNIPER ELITE", "players":"6 players", "description":"Precision weapons only", "bots":5},
     {"id":"zombies", "name":"NIGHTFALL ZOMBIES", "players":"1–4 players", "description":"Survive escalating infected waves", "bots":6},
-    {"id":"battle_royale", "name":"BATTLE ROYALE", "players":"12 operators", "description":"Last operator standing · shrinking zone", "bots":11},
+    {"id":"battle_royale", "name":"BATTLE ROYALE", "players":"16 operators", "description":"Island drop · looting · shrinking danger zone · last operator standing", "bots":15},
     {"id":"training", "name":"FIRING RANGE", "players":"Solo", "description":"Weapon practice · aim drills", "bots":4},
     {"id":"ranked", "name":"RANKED ARENA", "players":"5 vs 5", "description":"Competitive rounds · seasonal rating", "bots":8}
 ]
 const MAPS: Array[Dictionary] = [
-    {"id":"red_harbor", "name":"RED HARBOR", "theme":"INDUSTRIAL PORT", "size":"MEDIUM"},
+    {"id":"island", "name":"HAX ISLAND", "theme":"OPEN-WORLD COASTAL BATTLE ROYALE", "size":"XL"},
+    {"id":"red_harbor", "name":"RED HARBOR", "theme":"INDUSTRIAL PORT", "size":"LARGE"},
     {"id":"dust_front", "name":"DUST FRONT", "theme":"DESERT OUTPOST", "size":"LARGE"},
     {"id":"night_city", "name":"NIGHT CITY", "theme":"URBAN DISTRICT", "size":"LARGE"},
     {"id":"frostline", "name":"FROSTLINE", "theme":"ARCTIC RESEARCH BASE", "size":"MEDIUM"}
