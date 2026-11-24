@@ -43,7 +43,7 @@ var _owned_operator_skins: Array[String] = ["nacar_shadow"]
 var _owned_weapon_skins: Array[String] = ["blackout"]
 var _selected_operator_skin := "nacar_shadow"
 var _selected_weapon_skin := "blackout"
-var _settings: Dictionary = {"sensitivity":0.42,"aim_assist":true,"aim_strength":0.32,"aim_cone":8.0,"graphics":"high","volume":0.75}
+var _settings: Dictionary = {"sensitivity":0.42,"aim_assist":true,"aim_strength":0.62,"aim_cone":13.0,"graphics":"high","volume":0.75}
 
 func _ready() -> void:
     process_mode = Node.PROCESS_MODE_ALWAYS
