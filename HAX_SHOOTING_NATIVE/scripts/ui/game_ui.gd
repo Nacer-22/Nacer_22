@@ -326,26 +326,55 @@ func _add_back(parent: VBoxContainer) -> void:
     parent.add_child(b)
 
 func _show_mode_select() -> void:
-    var box := _new_page("Select Operation","Choose a mode, arena and difficulty.")
+    var box := _new_page("SELECT OPERATION","Choose your playlist and combat zone.")
+    var grid := GridContainer.new()
+    grid.columns = 2
+    grid.add_theme_constant_override("h_separation",10)
+    grid.add_theme_constant_override("v_separation",8)
+    grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    box.add_child(grid)
     for mode in GameData.MODES:
-        var b := Button.new()
-        b.text = "%s   •   %s" % [mode.name,mode.players]
-        _style_button(b,mode.id == selected_mode)
-        b.pressed.connect(func(): selected_mode = str(mode.id); _show_mode_select())
-        box.add_child(b)
+        var button := Button.new()
+        button.custom_minimum_size = Vector2(300,66)
+        button.text = "%s\n%s   •   %s" % [mode.name,mode.players,mode.description]
+        button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+        button.add_theme_font_size_override("font_size",14)
+        _style_button(button,str(mode.id) == selected_mode)
+        button.pressed.connect(func():
+            selected_mode = str(mode.id)
+            for child in grid.get_children():
+                if child is Button:
+                    child.disabled = false
+            button.disabled = true
+        )
+        grid.add_child(button)
+    var map_row := HBoxContainer.new()
+    box.add_child(map_row)
+    var map_label := Label.new()
+    map_label.text = "BATTLEFIELD"
+    map_label.custom_minimum_size.x = 120
+    map_label.add_theme_color_override("font_color",Color("#ff647a"))
+    map_row.add_child(map_label)
     var map_pick := OptionButton.new()
+    map_pick.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     for game_map in GameData.MAPS:
-        map_pick.add_item(str(game_map.name))
-    box.add_child(map_pick)
+        map_pick.add_item("%s  |  %s  |  %s" % [game_map.name,game_map.theme,game_map.size])
+    var selected_index := 0
+    for index in range(GameData.MAPS.size()):
+        if str(GameData.MAPS[index].id) == selected_map:
+            selected_index = index
+            break
+    map_pick.select(selected_index)
+    map_pick.item_selected.connect(func(index: int): selected_map = str(GameData.MAPS[index].id))
+    map_row.add_child(map_pick)
     var deploy := Button.new()
-    deploy.text = "DEPLOY INTO BATTLE"
+    deploy.text = "▶  DEPLOY INTO BATTLE"
+    deploy.custom_minimum_size.y = 58
     _style_button(deploy,true)
-    deploy.pressed.connect(func():
-        selected_map = str(GameData.MAPS[map_pick.selected].id)
-        start_requested.emit(selected_mode,selected_map)
-    )
+    deploy.pressed.connect(func(): start_requested.emit(selected_mode,selected_map))
     box.add_child(deploy)
     _add_back(box)
+
 
 func _show_armory() -> void:
     var box := _new_page("Armory","Six weapon classes · choose your loadout.")
