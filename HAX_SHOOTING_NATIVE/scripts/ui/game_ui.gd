@@ -679,10 +679,11 @@ func _build_hud() -> void:
     _feed.add_theme_color_override("font_color",Color("#ffd3dc"))
     _hud.add_child(_feed)
 
-func update_battle_royale(radius: float, elapsed: float) -> void:
+func update_battle_royale(radius: float, elapsed: float, kills: int, alive: int) -> void:
     if not is_instance_valid(_zone_label):
         return
     var seconds_to_shrink := maxi(0,24 - int(elapsed))
+    _score_label.text = "ELIMS %02d  •  %02d ALIVE" % [kills,alive + 1]
     if elapsed < 24.0:
         _zone_label.text = "SAFE ZONE  •  RADIUS %.0f M  •  SHRINK IN %02d" % [radius,seconds_to_shrink]
     else:
