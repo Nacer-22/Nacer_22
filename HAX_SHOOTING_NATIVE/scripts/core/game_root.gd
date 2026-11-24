@@ -14,7 +14,7 @@ var lobby: HAXLobbyClient
 var lan: HAXLanSession
 var nav_grid: AStarGrid2D
 var current_mode := "tdm"
-var current_map := "red_harbor"
+var current_map := "island"
 var round_number := 1
 var kills := 0
 var deaths := 0
@@ -25,6 +25,12 @@ var _round_transition := false
 var _respawn_pending := false
 var _remote_operators: Dictionary = {}
 var _state_send_timer := 0.0
+var _zone_center := Vector3.ZERO
+var _zone_radius := 88.0
+var _zone_elapsed := 0.0
+var _zone_tick := 0.0
+var _zone_visual: MeshInstance3D
+var _match_time := 0.0
 
 func _ready() -> void:
     _setup_input_map()
@@ -75,8 +81,13 @@ func _ready() -> void:
 func _process(delta: float) -> void:
     if not is_match_active or is_paused or not is_instance_valid(player):
         return
+    _match_time += delta
+    if current_mode == "battle_royale":
+        _update_battle_royale(delta)
     var ammo: Dictionary = player.ammo_by_weapon.get(str(player.weapon_data.get("id","hax_ar")),{"mag":0,"reserve":0})
     ui.update_hud(player.health,player.armor,int(ammo.get("mag",0)),int(ammo.get("reserve",0)),round_number,kills,deaths,str(GameData.get_mode(current_mode).name))
+    if current_mode == "battle_royale":
+        ui.update_battle_royale(_zone_radius,_zone_elapsed)
     _state_send_timer -= delta
     if _state_send_timer <= 0.0:
         if lobby.room_code != "":
