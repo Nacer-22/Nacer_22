@@ -36,7 +36,7 @@ func connect_server(url_override := "") -> void:
     connection_changed.emit(false,"CONNECTING TO HAX NETWORK...")
 
 func create_room(room_name: String,mode_id: String,map_id: String) -> void:
-    _pending_action = {"type":"create_room","name":player_name,"roomName":room_name,"mode":mode_id,"map":map_id,"maxPlayers":10}
+    _pending_action = {"type":"create_room","name":player_name,"roomName":room_name,"mode":mode_id,"map":map_id,"maxPlayers":16}
     if peer.get_ready_state() == WebSocketPeer.STATE_OPEN:
         _send(_pending_action)
     else:
