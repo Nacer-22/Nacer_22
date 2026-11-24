@@ -207,13 +207,23 @@ func _clear_bots() -> void:
     _bots.clear()
 
 func _on_bot_eliminated(bot: Node,zone: String) -> void:
-    kills += 1
     _bots.erase(bot)
-    ui.add_kill_feed("%s  ✦  %s" % [bot.name,"HEADSHOT" if zone == "head" else "ELIMINATED"])
+    if zone != "zone":
+        kills += 1
+        ui.add_rank_points(18 if current_mode == "ranked" else 8)
+        ui.add_kill_feed("%s  ✦  %s" % [bot.name,"HEADSHOT" if zone == "head" else "ELIMINATED"])
     if _bots.is_empty() and is_match_active and not _round_transition:
         _round_transition = true
-        ui.add_kill_feed("ROUND CLEARED — NEXT WAVE INCOMING")
-        get_tree().create_timer(2.5).timeout.connect(_next_round)
+        if current_mode == "battle_royale":
+            is_match_active = false
+            player.set_controls_enabled(false)
+            ui.add_rank_points(260)
+            ui.show_match_result("VICTORY ROYALE","LAST OPERATOR STANDING",kills,"1 / 16",260)
+            _remove_safe_zone()
+        else:
+            ui.add_rank_points(35)
+            ui.add_kill_feed("ROUND CLEARED — NEXT WAVE INCOMING")
+            get_tree().create_timer(2.5).timeout.connect(_next_round)
 
 func _next_round() -> void:
     if not is_match_active:
@@ -228,8 +238,15 @@ func _on_player_killed() -> void:
         return
     deaths += 1
     _respawn_pending = true
-    ui.add_kill_feed("YOU WERE ELIMINATED — REDEPLOYING")
     player.set_controls_enabled(false)
+    if current_mode == "battle_royale":
+        is_match_active = false
+        ui.add_rank_points(-35)
+        ui.show_match_result("ELIMINATED","YOUR RUN HAS ENDED",kills,"TOP 16",-35)
+        _remove_safe_zone()
+        _respawn_pending = false
+        return
+    ui.add_kill_feed("YOU WERE ELIMINATED — REDEPLOYING")
     get_tree().create_timer(3.0).timeout.connect(func():
         if is_match_active:
             player.respawn_at(Vector3(0,0.1,43))
