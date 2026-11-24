@@ -170,18 +170,21 @@ func _build_island() -> void:
         Vector3(90,0,-8),Vector3(89,0,-80),Vector3(58,0,-88),Vector3(20,0,-88)
     ]:
         _add_rock(p,0.75 + float(abs(roundi(p.x * 0.5 + p.z))) * 0.004)
-    _add_banner(Vector3(0,8,-92),Vector3(15,8,0.5))
+    _add_banner(Vector3(0,0,-92),Vector3(15,8,0.5))
     _add_box(Vector3(0,0.35,-12),Vector3(18,0.7,3),_materials.metal)
     _add_box(Vector3(0,0.35,16),Vector3(18,0.7,3),_materials.metal)
 
 func _add_banner(pos: Vector3, size: Vector3) -> void:
     var pole_height := maxf(3.0,size.y)
-    _add_box(pos + Vector3(-size.x*0.5,0,0),Vector3(0.22,pole_height,0.22),_materials.metal)
-    _add_box(pos + Vector3(size.x*0.5,0,0),Vector3(0.22,pole_height,0.22),_materials.metal)
+    _add_box(pos + Vector3(-size.x*0.5,pole_height*0.5,0),Vector3(0.22,pole_height,0.22),_materials.metal)
+    _add_box(pos + Vector3(size.x*0.5,pole_height*0.5,0),Vector3(0.22,pole_height,0.22),_materials.metal)
     _add_box(pos + Vector3(0,pole_height*0.34,0),Vector3(size.x,0.16,0.18),_materials.metal)
     var banner_material := _mat(Color("#a70f2d"),0.72,0.18)
     _add_box(pos + Vector3(0,pole_height*0.66,0.04),Vector3(size.x*0.92,pole_height*0.48,0.10),banner_material,false)
-    var trim := _mat(Color("#ee3154"),0.45,0.25,Color("#8e102c"))
+    var trim := _mat(Color("#ee3154"),0.45,0.25)
+    trim.emission_enabled = true
+    trim.emission = Color("#8e102c")
+    trim.emission_energy_multiplier = 1.4
     _add_box(pos + Vector3(0,pole_height*0.42,0.10),Vector3(size.x*0.92,0.12,0.06),trim,false)
 
 func _add_tree(pos: Vector3, scale_value: float) -> void:
