@@ -438,6 +438,12 @@ func apply_weapon_skin(skin_id: String) -> void:
     if is_instance_valid(_weapon_mount):
         _build_weapon_visual()
 
+func _weapon_skin_color(skin_id: String, fallback: Color) -> Color:
+    for skin in GameData.WEAPON_SKINS:
+        if str(skin.id) == skin_id:
+            return skin.color
+    return fallback
+
 func _operator_colors() -> Array[Color]:
     for skin in GameData.OPERATOR_SKINS:
         if str(skin.id) == current_operator_skin:
@@ -467,7 +473,7 @@ func try_fire() -> void:
         var query := PhysicsRayQueryParameters3D.create(from, to, 1 | 4)
         query.exclude = [get_rid()]
         query.collide_with_areas = true
-        query.collide_with_bodies = false
+        query.collide_with_bodies = true
         var result := get_world_3d().direct_space_state.intersect_ray(query)
         if not result.is_empty():
             var collider: Object = result.collider
