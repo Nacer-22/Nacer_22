@@ -584,7 +584,7 @@ func _apply_soft_aim(delta: float) -> void:
     var desired := Vector3.ZERO
     var selected: Node3D = null
     for bot in get_tree().get_nodes_in_group("bots"):
-        if not is_instance_valid(bot) or bot.is_dead:
+        if not is_instance_valid(bot) or bot.is_dead or int(bot.get("team_id")) == team_id:
             continue
         var point: Vector3 = bot.get_head_position() if bot.has_method("get_head_position") else bot.global_position + Vector3.UP * 1.45
         if not _camera.is_position_behind(point):
