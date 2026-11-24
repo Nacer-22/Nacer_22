@@ -1,0 +1,123 @@
+name: HAX SHOOTING Third-Person Battle Royale Android
+on:
+  push:
+    branches: [hax-battle-royale-tps]
+    paths:
+      - 'HAX_SHOOTING_NATIVE/**'
+      - '.github/workflows/hax-battle-royale-tps.yml'
+  workflow_dispatch:
+jobs:
+  build-android:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Generate operator, weapon, sound and PBR assets
+        working-directory: HAX_SHOOTING_NATIVE
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r tools/requirements.txt
+          python tools/generate_assets.py
+          python tools/generate_pbr_textures.py
+          test -s assets/models/operators/operator_nacar.glb
+          test -s assets/models/operators/operator_arctic.glb
+          test -s assets/models/weapons/hax_ar.glb
+          test -s assets/audio/rifle_shot.wav
+          test -s assets/textures/hires/concrete_albedo_2k.jpg
+          echo "Generated game assets:"
+          du -sh assets/models assets/audio assets/textures
+      - name: Install Android SDK components
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools'
+      - name: Install Android packages
+        shell: bash
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager --install "platform-tools" "platforms;android-35" "build-tools;35.0.1" "ndk;28.1.13356709"
+          echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> "$GITHUB_ENV"
+      - name: Download Godot 4.7.2 editor
+        shell: bash
+        run: |
+          curl -fL --retry 3 "https://downloads.godotengine.org/?flavor=stable&platform=linux.64&slug=linux.x86_64.zip&version=4.7.2" -o godot.zip
+          mkdir -p "$RUNNER_TEMP/godot"
+          unzip -q godot.zip -d "$RUNNER_TEMP/godot"
+          chmod +x "$RUNNER_TEMP/godot/Godot_v4.7.2-stable_linux.x86_64"
+          ln -sf "$RUNNER_TEMP/godot/Godot_v4.7.2-stable_linux.x86_64" "$RUNNER_TEMP/godot/godot"
+          echo "$RUNNER_TEMP/godot" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/godot/Godot_v4.7.2-stable_linux.x86_64" --version
+      - name: Install Android export templates
+        shell: bash
+        run: |
+          python -m pip install --no-cache-dir remotezip
+          python - <<'PY'
+          from pathlib import Path
+          from remotezip import RemoteZip
+          url = "https://downloads.godotengine.org/?flavor=stable&platform=templates&slug=export_templates.tpz&version=4.7.2"
+          dest = Path.home() / ".local/share/godot/export_templates/4.7.2.stable"
+          dest.mkdir(parents=True, exist_ok=True)
+          wanted = {"android_debug.apk", "android_release.apk", "version.txt"}
+          found = set()
+          with RemoteZip(url, timeout=180) as archive:
+              for name in archive.namelist():
+                  base = Path(name).name
+                  if base in wanted and base not in found:
+                      data = archive.read(name)
+                      if not data:
+                          raise RuntimeError("empty export template: " + name)
+                      (dest / base).write_bytes(data)
+                      found.add(base)
+                      print("Fetched", name, len(data))
+          if found != wanted:
+              raise RuntimeError("Missing Android templates: " + str(wanted-found))
+          PY
+          ls -lh "$HOME/.local/share/godot/export_templates/4.7.2.stable"
+      - name: Import HAX project and validate scripts
+        working-directory: HAX_SHOOTING_NATIVE
+        run: |
+          godot --headless --editor --path . --import --quit
+      - name: Headless game startup smoke test
+        working-directory: HAX_SHOOTING_NATIVE
+        run: |
+          godot --headless --path . --quit-after 12
+      - name: Export Android APK
+        working-directory: HAX_SHOOTING_NATIVE
+        run: |
+          mkdir -p build
+          godot --headless --path . --export-debug "Android APK" build/HAX_BATTLE_ROYALE_unsigned.apk
+          test -s build/HAX_BATTLE_ROYALE_unsigned.apk
+      - name: Sign and verify APK with temporary test key
+        working-directory: HAX_SHOOTING_NATIVE
+        shell: bash
+        run: |
+          keytool -genkeypair -noprompt -v -keystore "$RUNNER_TEMP/hax-tps-test.keystore" -storepass android -alias haxshooting -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=HAX SHOOTING, OU=NACAR, O=NACAR, L=Alger, S=Algeria, C=DZ"
+          ZIPALIGN="$ANDROID_HOME/build-tools/35.0.1/zipalign"
+          APKSIGNER="$ANDROID_HOME/build-tools/35.0.1/apksigner"
+          "$ZIPALIGN" -f -p 4 build/HAX_BATTLE_ROYALE_unsigned.apk build/HAX_BATTLE_ROYALE_aligned.apk
+          "$APKSIGNER" sign --ks "$RUNNER_TEMP/hax-tps-test.keystore" --ks-key-alias haxshooting --ks-pass pass:android --key-pass pass:android --out build/HAX_BATTLE_ROYALE.apk build/HAX_BATTLE_ROYALE_aligned.apk
+          "$APKSIGNER" verify --verbose build/HAX_BATTLE_ROYALE.apk
+          sha256sum build/HAX_BATTLE_ROYALE.apk | tee build/SHA256SUMS.txt
+          printf "HAX SHOOTING TPS / BATTLE ROYALE\nGodot 4.7.2\nBranch: hax-battle-royale-tps\nTemporary test signing key; replace with a private release key for store distribution.\n" > build/BUILD_INFO.txt
+      - name: Package native game source and generated assets
+        working-directory: HAX_SHOOTING_NATIVE
+        run: |
+          zip -qr build/HAX_BATTLE_ROYALE_SOURCE.zip . -x ".godot/*" "build/*" ".git/*"
+          test -s build/HAX_BATTLE_ROYALE_SOURCE.zip
+      - name: Upload HAX TPS APK and source
+        uses: actions/upload-artifact@v4
+        with:
+          name: HAX-THIRD-PERSON-BATTLE-ROYALE
+          path: |
+            HAX_SHOOTING_NATIVE/build/HAX_BATTLE_ROYALE.apk
+            HAX_SHOOTING_NATIVE/build/HAX_BATTLE_ROYALE_SOURCE.zip
+            HAX_SHOOTING_NATIVE/build/SHA256SUMS.txt
+            HAX_SHOOTING_NATIVE/build/BUILD_INFO.txt
+          if-no-files-found: error
+          retention-days: 30
