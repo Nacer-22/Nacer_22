@@ -9,7 +9,11 @@ var move_speed := 4.4
 var damage := 8.0
 var fire_interval := 1.25
 var accuracy := 0.68
-var target: FPSPlayer
+var target: Node3D
+var player_owner: FPSPlayer
+var team_id := 0
+var battle_royale := false
+var _target_refresh_timer := 0.0
 var navigation_grid: AStarGrid2D
 var path_points: Array[Vector2i] = []
 var path_index := 0
@@ -24,10 +28,13 @@ var _body_area: Area3D
 var _team_color := Color("#d31b39")
 var _rng := RandomNumberGenerator.new()
 
-func configure(player: FPSPlayer, grid: AStarGrid2D, difficulty := "normal", team_color := Color("#d31b39")) -> void:
+func configure(player: FPSPlayer, grid: AStarGrid2D, difficulty := "normal", team_color := Color("#d31b39"), new_team_id := 0, use_battle_royale := false) -> void:
+    player_owner = player
     target = player
     navigation_grid = grid
     _team_color = team_color
+    team_id = new_team_id
+    battle_royale = use_battle_royale
     match difficulty:
         "easy":
             move_speed = 3.4
@@ -113,7 +120,13 @@ func _build_visual() -> void:
     add_child(mesh)
 
 func _physics_process(delta: float) -> void:
-    if is_dead or not is_instance_valid(target) or target.is_dead:
+    if is_dead:
+        return
+    if battle_royale:
+        _target_refresh_timer -= delta
+        if not is_instance_valid(target) or _target_is_dead() or _target_refresh_timer <= 0.0:
+            _choose_battle_target()
+    if not is_instance_valid(target) or _target_is_dead():
         velocity.x = move_toward(velocity.x, 0.0, 12.0 * delta)
         velocity.z = move_toward(velocity.z, 0.0, 12.0 * delta)
         return
@@ -218,7 +231,34 @@ func _attack_target(distance: float) -> void:
     query.collide_with_areas = false
     var result := get_world_3d().direct_space_state.intersect_ray(query)
     if not result.is_empty() and result.collider == target:
-        target.take_damage(damage, "HAX ENFORCER")
+        if target == player_owner:
+            player_owner.take_damage(damage, "HAX ENFORCER")
+        elif target.has_method("apply_damage"):
+            target.apply_damage(damage,"bot")
+
+
+func _target_is_dead() -> bool:
+    if not is_instance_valid(target):
+        return true
+    return bool(target.get("is_dead"))
+
+func _choose_battle_target() -> void:
+    _target_refresh_timer = _rng.randf_range(1.1,2.1)
+    if not is_instance_valid(player_owner) or player_owner.is_dead:
+        target = null
+        return
+    var best: Node3D = player_owner
+    var best_distance := global_position.distance_to(player_owner.global_position)
+    for other in get_tree().get_nodes_in_group("bots"):
+        if other == self or bool(other.get("is_dead")):
+            continue
+        if int(other.get("team_id")) == team_id:
+            continue
+        var distance := global_position.distance_to(other.global_position)
+        if distance < best_distance and distance < 52.0:
+            best = other
+            best_distance = distance
+    target = best
 
 func get_head_position() -> Vector3:
     return global_position + Vector3.UP * 1.72
