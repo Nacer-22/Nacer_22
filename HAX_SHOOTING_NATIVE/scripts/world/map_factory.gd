@@ -5,15 +5,17 @@ var obstacles: Array[Dictionary] = []
 var spawn_points: Array[Vector3] = []
 var _materials: Dictionary = {}
 var map_id := "red_harbor"
+var map_half_extent := 70
 
 func build_map(id: String) -> void:
     map_id = id
+    map_half_extent = 100 if map_id == "island" else 70
     for child in get_children():
         child.queue_free()
     obstacles.clear()
     spawn_points.clear()
     _create_materials()
-    _add_box(Vector3(0,-0.65,0),Vector3(200,1.2,200),_materials.floor,true,false)
+    _add_box(Vector3(0,-0.65,0),Vector3(map_half_extent*2,1.2,map_half_extent*2),_materials.floor,true,false)
     _add_perimeter()
     match map_id:
         "island": _build_island()
@@ -72,12 +74,14 @@ func _mat(color: Color, roughness := 0.8, metallic := 0.0) -> StandardMaterial3D
     return m
 
 func _add_perimeter() -> void:
-    _add_box(Vector3(0,1.8,-100),Vector3(200,3.6,1.2),_materials.concrete)
-    _add_box(Vector3(0,1.8,100),Vector3(200,3.6,1.2),_materials.concrete)
-    _add_box(Vector3(-100,1.8,0),Vector3(1.2,3.6,200),_materials.concrete)
-    _add_box(Vector3(100,1.8,0),Vector3(1.2,3.6,200),_materials.concrete)
-    for x in range(-90,91,20):
-        _add_box(Vector3(x,3.72,-99.1),Vector3(2,0.18,0.14),_materials.red,false)
+    var edge := float(map_half_extent)
+    var span := edge * 2.0
+    _add_box(Vector3(0,1.8,-edge),Vector3(span,3.6,1.2),_materials.concrete)
+    _add_box(Vector3(0,1.8,edge),Vector3(span,3.6,1.2),_materials.concrete)
+    _add_box(Vector3(-edge,1.8,0),Vector3(1.2,3.6,span),_materials.concrete)
+    _add_box(Vector3(edge,1.8,0),Vector3(1.2,3.6,span),_materials.concrete)
+    for x in range(-map_half_extent+10,map_half_extent-10,20):
+        _add_box(Vector3(x,3.72,-edge+0.9),Vector3(2,0.18,0.14),_materials.red,false)
 
 func _build_harbor() -> void:
     for z in [-34,-18,18,34]:
@@ -288,12 +292,20 @@ func _cover(pos: Vector3,material: Material = null) -> void:
     _add_box(pos+Vector3(0,1.88,0),Vector3(5.8,0.14,2.45),_materials.dark,false)
 
 func _make_spawns() -> void:
-    spawn_points = [
-        Vector3(-78,0.1,-74),Vector3(78,0.1,74),Vector3(-78,0.1,74),Vector3(78,0.1,-74),
-        Vector3(0,0.1,-82),Vector3(0,0.1,82),Vector3(-84,0.1,0),Vector3(84,0.1,0),
-        Vector3(-48,0.1,-32),Vector3(48,0.1,32),Vector3(-32,0.1,48),Vector3(32,0.1,-48),
-        Vector3(-62,0.1,24),Vector3(62,0.1,-24),Vector3(-18,0.1,-72),Vector3(18,0.1,72)
-    ]
+    if map_id == "island":
+        spawn_points = [
+            Vector3(-78,0.1,-74),Vector3(78,0.1,74),Vector3(-78,0.1,74),Vector3(78,0.1,-74),
+            Vector3(0,0.1,-82),Vector3(0,0.1,82),Vector3(-84,0.1,0),Vector3(84,0.1,0),
+            Vector3(-48,0.1,-32),Vector3(48,0.1,32),Vector3(-32,0.1,48),Vector3(32,0.1,-48),
+            Vector3(-62,0.1,24),Vector3(62,0.1,-24),Vector3(-18,0.1,-72),Vector3(18,0.1,72)
+        ]
+    else:
+        spawn_points = [
+            Vector3(-48,0.1,-45),Vector3(48,0.1,45),Vector3(-48,0.1,45),Vector3(48,0.1,-45),
+            Vector3(0,0.1,-52),Vector3(0,0.1,52),Vector3(-54,0.1,0),Vector3(54,0.1,0),
+            Vector3(-28,0.1,-12),Vector3(28,0.1,12),Vector3(-12,0.1,28),Vector3(12,0.1,-28),
+            Vector3(-38,0.1,18),Vector3(38,0.1,-18),Vector3(-18,0.1,-45),Vector3(18,0.1,45)
+        ]
 
 func _add_lighting() -> void:
     var sun := DirectionalLight3D.new()
@@ -312,7 +324,7 @@ func _add_lighting() -> void:
 
 func make_navigation_grid() -> AStarGrid2D:
     var grid := AStarGrid2D.new()
-    grid.region = Rect2i(-98,-98,196,196)
+    grid.region = Rect2i(-map_half_extent+2,-map_half_extent+2,map_half_extent*2-4,map_half_extent*2-4)
     grid.cell_size = Vector2.ONE
     grid.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_AT_LEAST_ONE_WALKABLE
     grid.update()
