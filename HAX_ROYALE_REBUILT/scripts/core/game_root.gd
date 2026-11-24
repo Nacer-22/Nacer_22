@@ -300,7 +300,7 @@ func _spawn_round_bots() -> void:
     for i in range(count):
         var bot := BotScript.new()
         bot.name = "HAX_BOT_%02d" % (i+1)
-        var spawn_index := (i+1) % map_factory.spawn_points.size()
+        var spawn_index := i % map_factory.spawn_points.size()
         if current_mode == "battle_royale" and _player_spawn_index >= 0 and spawn_index >= _player_spawn_index:
             spawn_index += 1
         var spawn: Vector3 = map_factory.spawn_points[spawn_index]
