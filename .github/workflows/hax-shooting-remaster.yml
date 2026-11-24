@@ -27,6 +27,8 @@ jobs:
           git fetch --depth 1 origin 11619794d644e7933f87caa6099f3acc1f085f5d
           git checkout --detach 11619794d644e7933f87caa6099f3acc1f085f5d
           echo "FPS_TEMPLATE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Validate remaster patcher syntax
+        run: python -m py_compile HAX_SHOOTING_NATIVE/tools/remaster_fps.py
       - name: Apply HAX SHOOTING mobile remaster
         run: |
           python HAX_SHOOTING_NATIVE/tools/remaster_fps.py --project "$RUNNER_TEMP/fps-template"
