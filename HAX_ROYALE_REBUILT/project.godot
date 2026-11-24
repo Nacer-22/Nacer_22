@@ -3,17 +3,19 @@
 config_version=5
 
 [application]
-config/name="HAX SHOOTING"
-config/description="HAX SHOOTING — Tactical FPS by NACAR_22"
+config/name="HAX SHOOTING: ROYALE"
+config/description="HAX SHOOTING ROYALE — Third-Person Battle Royale by NACAR_22"
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
+boot_splash/bg_color=Color(0.012, 0.014, 0.02, 1)
+boot_splash/fullsize=true
 config/icon="res://assets/hax_skull_logo.svg"
 
 [display]
 window/size/viewport_width=1920
 window/size/viewport_height=1080
-window/size/window_width_override=1280
-window/size/window_height_override=720
+window/size/window_width_override=1600
+window/size/window_height_override=900
 window/stretch/mode="canvas_items"
 window/handheld/orientation=0
 
