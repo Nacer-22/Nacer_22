@@ -22,7 +22,7 @@ def patch_project(root: pathlib.Path) -> None:
     text = replace_once(text, 'config/icon="res://icon.svg"',
         'config/icon="res://hax/icon.svg"\nconfig/description="HAX SHOOTING — Tactical FPS by NACAR_22"\nboot_splash/image="res://hax/boot_splash.svg"\nboot_splash/bg_color=Color(0.012, 0.014, 0.02, 1)\nboot_splash/fullsize=false\nboot_splash/use_filter=true',
         "application icon and boot splash")
-    text += """
+    text = text.replace('window/size/viewport_height=1080', 'window/size/viewport_height=1080\\nwindow/handheld/orientation=0')\n    text += """
 
 [rendering]
 renderer/rendering_method="mobile"
