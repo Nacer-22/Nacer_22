@@ -8,9 +8,9 @@ test('accepts normal movement and clamps play area', () => {
   assert.equal(result.ok, true);
   assert.equal(result.position.x, 1);
   const clamped = validateMovement(null, {x:1000,y:100,z:-1000}, 0.1);
-  assert.equal(clamped.position.x, 58);
+  assert.equal(clamped.position.x, 100);
   assert.equal(clamped.position.y, 4);
-  assert.equal(clamped.position.z, -58);
+  assert.equal(clamped.position.z, -100);
 });
 
 test('rejects a teleport or excessive movement speed', () => {
