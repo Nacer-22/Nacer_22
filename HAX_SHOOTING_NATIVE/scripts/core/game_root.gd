@@ -31,6 +31,9 @@ var _zone_elapsed := 0.0
 var _zone_tick := 0.0
 var _zone_visual: MeshInstance3D
 var _match_time := 0.0
+var _loot_nodes: Array[Node3D] = []
+var _loot_check_timer := 0.0
+var _supply_drop_spawned := false
 
 func _ready() -> void:
     _setup_input_map()
@@ -84,6 +87,7 @@ func _process(delta: float) -> void:
     _match_time += delta
     if current_mode == "battle_royale":
         _update_battle_royale(delta)
+        _check_loot_pickups(delta)
     var ammo: Dictionary = player.ammo_by_weapon.get(str(player.weapon_data.get("id","hax_ar")),{"mag":0,"reserve":0})
     ui.update_hud(player.health,player.armor,int(ammo.get("mag",0)),int(ammo.get("reserve",0)),round_number,kills,deaths,str(GameData.get_mode(current_mode).name))
     if current_mode == "battle_royale":
@@ -156,6 +160,9 @@ func _start_match(mode_id: String,map_id: String) -> void:
     map_factory.build_map(current_map)
     nav_grid = map_factory.make_navigation_grid()
     _match_time = 0.0
+    _loot_check_timer = 0.0
+    _supply_drop_spawned = false
+    _clear_loot()
     _zone_elapsed = 0.0
     _zone_tick = 0.0
     _zone_center = Vector3(randf_range(-8.0,8.0),0.0,randf_range(-8.0,8.0))
@@ -172,6 +179,8 @@ func _start_match(mode_id: String,map_id: String) -> void:
     player.set_controls_enabled(true)
     ui.show_game_hud(OS.has_feature("mobile"))
     _spawn_round_bots()
+    if current_mode == "battle_royale":
+        _spawn_loot()
     if not OS.has_feature("mobile"):
         Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
@@ -255,6 +264,157 @@ func _on_player_killed() -> void:
     )
 
 
+
+func _spawn_loot() -> void:
+    var points: Array[Vector3] = [
+        Vector3(-62,0.1,-52),Vector3(-48,0.1,-72),Vector3(-72,0.1,-34),
+        Vector3(62,0.1,-52),Vector3(82,0.1,-70),Vector3(70,0.1,-28),
+        Vector3(-72,0.1,28),Vector3(-54,0.1,66),Vector3(-28,0.1,48),
+        Vector3(62,0.1,28),Vector3(78,0.1,60),Vector3(28,0.1,68),
+        Vector3(-18,0.1,-76),Vector3(16,0.1,-58),Vector3(18,0.1,24),
+        Vector3(-18,0.1,16),Vector3(44,0.1,2),Vector3(-42,0.1,-4)
+    ]
+    var kinds := ["ammo","medkit","armor","ammo","weapon","medkit","armor","ammo","weapon","ammo","medkit","armor","ammo","weapon","ammo","medkit","armor","ammo"]
+    for i in range(points.size()):
+        var kind: String = kinds[i]
+        var weapon_index := randi_range(0,GameData.WEAPONS.size()-1)
+        var amount := 55
+        if kind == "ammo":
+            amount = 65
+        elif kind == "medkit":
+            amount = 35
+        elif kind == "armor":
+            amount = 35
+        _create_loot_drop(points[i],kind,amount,weapon_index)
+
+func _create_loot_drop(pos: Vector3,kind: String,amount: int,weapon_index := 0) -> void:
+    var drop := Node3D.new()
+    drop.name = "HAX_LOOT_" + kind.to_upper()
+    drop.position = pos + Vector3(0,0.05,0)
+    drop.set_meta("loot_type",kind)
+    drop.set_meta("loot_amount",amount)
+    drop.set_meta("weapon_index",weapon_index)
+    var color := Color("#f0b63d")
+    var label_text := "AMMO"
+    match kind:
+        "medkit":
+            color = Color("#5fe08b")
+            label_text = "MEDKIT"
+        "armor":
+            color = Color("#54b7ff")
+            label_text = "ARMOR"
+        "weapon":
+            color = Color("#ff4d68")
+            label_text = "WEAPON"
+        "supply":
+            color = Color("#ff3155")
+            label_text = "SUPPLY DROP"
+    var crate := MeshInstance3D.new()
+    var crate_mesh := BoxMesh.new()
+    crate_mesh.size = Vector3(0.82,0.62,0.82)
+    crate.mesh = crate_mesh
+    var material := StandardMaterial3D.new()
+    material.albedo_color = Color("#171f2c")
+    material.metallic = 0.55
+    material.roughness = 0.38
+    crate.material_override = material
+    crate.position.y = 0.36
+    drop.add_child(crate)
+    var stripe := MeshInstance3D.new()
+    var stripe_mesh := BoxMesh.new()
+    stripe_mesh.size = Vector3(0.86,0.09,0.86)
+    stripe.mesh = stripe_mesh
+    var stripe_material := StandardMaterial3D.new()
+    stripe_material.albedo_color = color
+    stripe_material.emission_enabled = true
+    stripe_material.emission = color
+    stripe_material.emission_energy_multiplier = 1.2
+    stripe.material_override = stripe_material
+    stripe.position.y = 0.55
+    drop.add_child(stripe)
+    var light := OmniLight3D.new()
+    light.position.y = 1.15
+    light.light_color = color
+    light.light_energy = 0.8 if kind != "supply" else 1.8
+    light.omni_range = 5.5 if kind != "supply" else 12.0
+    drop.add_child(light)
+    var label := Label3D.new()
+    label.text = label_text
+    label.position.y = 1.55
+    label.pixel_size = 0.008
+    label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+    label.modulate = color
+    drop.add_child(label)
+    if kind == "supply":
+        var beacon := MeshInstance3D.new()
+        var beam := CylinderMesh.new()
+        beam.top_radius = 0.18
+        beam.bottom_radius = 0.18
+        beam.height = 15.0
+        beacon.mesh = beam
+        var beam_mat := StandardMaterial3D.new()
+        beam_mat.albedo_color = Color(1.0,0.08,0.2,0.16)
+        beam_mat.emission_enabled = true
+        beam_mat.emission = Color("#ff163f")
+        beam_mat.emission_energy_multiplier = 0.55
+        beam_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+        beacon.material_override = beam_mat
+        beacon.position.y = 8.0
+        drop.add_child(beacon)
+    add_child(drop)
+    _loot_nodes.append(drop)
+
+func _check_loot_pickups(delta: float) -> void:
+    _loot_check_timer += delta
+    if _loot_check_timer < 0.18:
+        return
+    _loot_check_timer = 0.0
+    for drop in _loot_nodes.duplicate():
+        if not is_instance_valid(drop):
+            _loot_nodes.erase(drop)
+            continue
+        if player.global_position.distance_to(drop.global_position) > 2.35:
+            continue
+        var kind := str(drop.get_meta("loot_type","ammo"))
+        var amount := int(drop.get_meta("loot_amount",50))
+        match kind:
+            "ammo":
+                player.add_ammo(amount)
+                ui.add_kill_feed("LOOT PICKED  •  AMMO +%d" % amount)
+            "medkit":
+                player.heal(float(amount))
+                ui.add_kill_feed("LOOT PICKED  •  MEDKIT +%d HP" % amount)
+            "armor":
+                player.add_armor(float(amount))
+                ui.add_kill_feed("LOOT PICKED  •  ARMOR +%d" % amount)
+            "weapon":
+                var index := int(drop.get_meta("weapon_index",0))
+                player.add_weapon_pickup(index)
+                ui.add_kill_feed("LOOT PICKED  •  %s" % GameData.WEAPONS[index].name)
+            "supply":
+                player.heal(45.0)
+                player.add_armor(55.0)
+                player.add_ammo(120)
+                var index := int(drop.get_meta("weapon_index",3))
+                player.add_weapon_pickup(index)
+                ui.add_kill_feed("SUPPLY DROP SECURED  •  RARE LOADOUT")
+        _loot_nodes.erase(drop)
+        drop.queue_free()
+
+func _spawn_supply_drop() -> void:
+    var angle := randf_range(0.0,TAU)
+    var distance := randf_range(10.0,maxf(12.0,_zone_radius*0.45))
+    var point := _zone_center + Vector3(cos(angle)*distance,0.1,sin(angle)*distance)
+    var weapon_index := randi_range(0,GameData.WEAPONS.size()-1)
+    _create_loot_drop(point,"supply",120,weapon_index)
+    ui.add_kill_feed("SUPPLY DROP INBOUND  •  CHECK THE RED BEACON")
+
+func _clear_loot() -> void:
+    for drop in _loot_nodes:
+        if is_instance_valid(drop):
+            drop.queue_free()
+    _loot_nodes.clear()
+
 func _create_safe_zone() -> void:
     _remove_safe_zone()
     var zone := Node3D.new()
@@ -292,6 +452,9 @@ func _update_zone_visual() -> void:
 func _update_battle_royale(delta: float) -> void:
     _zone_elapsed += delta
     _zone_tick += delta
+    if _zone_elapsed >= 65.0 and not _supply_drop_spawned:
+        _supply_drop_spawned = true
+        _spawn_supply_drop()
     if _zone_elapsed > 24.0 and _zone_radius > 18.0:
         var phase := floor((_zone_elapsed - 24.0) / 22.0)
         var target_radius := maxf(18.0, 116.0 - phase * 14.0)
