@@ -743,54 +743,56 @@ func _build_mobile_controls() -> void:
     var layer := Control.new()
     layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     layer.mouse_filter = Control.MOUSE_FILTER_PASS
-    layer.gui_input.connect(_on_mobile_gui_input)
     _hud.add_child(layer)
-    var left := HBoxContainer.new()
-    left.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-    left.offset_left = 18
-    left.offset_top = -190
-    left.offset_right = 238
-    left.offset_bottom = -18
-    layer.add_child(left)
-    var dirs := VBoxContainer.new()
-    dirs.alignment = BoxContainer.ALIGNMENT_CENTER
-    left.add_child(dirs)
-    var up := _touch_button("▲",Vector2(64,56))
-    up.button_down.connect(func(): mobile_move_changed.emit(Vector2(0,-1)))
-    up.button_up.connect(func(): mobile_move_changed.emit(Vector2.ZERO))
-    dirs.add_child(up)
-    var row := HBoxContainer.new()
-    dirs.add_child(row)
-    var l := _touch_button("◀",Vector2(64,56))
-    l.button_down.connect(func(): mobile_move_changed.emit(Vector2(-1,0)))
-    l.button_up.connect(func(): mobile_move_changed.emit(Vector2.ZERO))
-    row.add_child(l)
-    var down := _touch_button("▼",Vector2(64,56))
-    down.button_down.connect(func(): mobile_move_changed.emit(Vector2(0,1)))
-    down.button_up.connect(func(): mobile_move_changed.emit(Vector2.ZERO))
-    row.add_child(down)
-    var right := VBoxContainer.new()
-    right.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-    right.offset_left = -215
-    right.offset_top = -220
-    right.offset_right = -18
-    right.offset_bottom = -18
-    layer.add_child(right)
-    var fire := _touch_button("FIRE",Vector2(105,88))
-    fire.button_down.connect(func(): mobile_fire_changed.emit(true))
-    fire.button_up.connect(func(): mobile_fire_changed.emit(false))
-    right.add_child(fire)
-    var aim := _touch_button("AIM",Vector2(90,52))
-    aim.button_down.connect(func(): mobile_aim_changed.emit(true))
-    aim.button_up.connect(func(): mobile_aim_changed.emit(false))
-    right.add_child(aim)
-    var reload := _touch_button("RELOAD",Vector2(90,48))
-    reload.pressed.connect(func(): setting_changed.emit("reload",true))
-    right.add_child(reload)
+    var touch := Control.new()
+    touch.set_script(load("res://scripts/ui/touch_controller.gd"))
+    touch.move_changed.connect(mobile_move_changed.emit)
+    touch.look_changed.connect(mobile_look_changed.emit)
+    layer.add_child(touch)
 
-func _on_mobile_gui_input(event: InputEvent) -> void:
-    if event is InputEventScreenDrag and event.position.x > get_viewport().get_visible_rect().size.x * 0.38:
-        mobile_look_changed.emit(event.relative)
+    _add_mobile_action(layer,"FIRE",Rect2(0.84,0.74,0.14,0.19),"fire")
+    _add_mobile_action(layer,"AIM",Rect2(0.72,0.82,0.12,0.15),"aim")
+    _add_mobile_action(layer,"RELOAD",Rect2(0.86,0.56,0.12,0.15),"reload")
+    _add_mobile_action(layer,"JUMP",Rect2(0.70,0.57,0.13,0.16),"jump")
+    _add_mobile_action(layer,"CROUCH",Rect2(0.58,0.79,0.12,0.15),"crouch")
+    _add_mobile_action(layer,"SWAP",Rect2(0.86,0.39,0.12,0.15),"swap")
+    _add_mobile_action(layer,"RUN",Rect2(0.025,0.62,0.13,0.15),"run")
+
+func _add_mobile_action(parent: Control, label_text: String, rect: Rect2, action: String) -> void:
+    var button := Button.new()
+    button.anchor_left = rect.position.x
+    button.anchor_top = rect.position.y
+    button.anchor_right = rect.position.x + rect.size.x
+    button.anchor_bottom = rect.position.y + rect.size.y
+    button.offset_left = 0
+    button.offset_top = 0
+    button.offset_right = 0
+    button.offset_bottom = 0
+    button.text = label_text
+    button.add_theme_font_size_override("font_size",13 if action != "fire" else 16)
+    _style_button(button,action == "fire")
+    button.modulate = Color(1,1,1,0.9)
+    match action:
+        "fire":
+            button.button_down.connect(func(): mobile_fire_changed.emit(true))
+            button.button_up.connect(func(): mobile_fire_changed.emit(false))
+        "aim":
+            button.button_down.connect(func(): mobile_aim_changed.emit(true))
+            button.button_up.connect(func(): mobile_aim_changed.emit(false))
+        "reload":
+            button.pressed.connect(func(): setting_changed.emit("reload",true))
+        "jump":
+            button.button_down.connect(func(): Input.action_press("jump"))
+            button.button_up.connect(func(): Input.action_release("jump"))
+        "crouch":
+            button.pressed.connect(func(): setting_changed.emit("crouch",true))
+        "swap":
+            button.pressed.connect(func(): setting_changed.emit("weapon_next",true))
+        "run":
+            button.button_down.connect(func(): Input.action_press("sprint"))
+            button.button_up.connect(func(): Input.action_release("sprint"))
+    parent.add_child(button)
+
 
 func _touch_button(text: String,size: Vector2) -> Button:
     var b := Button.new()
