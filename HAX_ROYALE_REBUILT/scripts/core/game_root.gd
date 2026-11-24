@@ -34,6 +34,8 @@ var _match_time := 0.0
 var _loot_nodes: Array[Node3D] = []
 var _loot_check_timer := 0.0
 var _supply_drop_spawned := false
+var _lobby_stage: Node3D
+var _player_spawn_index := -1
 
 func _ready() -> void:
     _setup_input_map()
@@ -42,10 +44,12 @@ func _ready() -> void:
     map_factory.name = "WorldMap"
     add_child(map_factory)
     map_factory.build_map(current_map)
+    _create_lobby_stage()
     player = PlayerScript.new()
     player.name = "NACAR_PLAYER"
     add_child(player)
-    player.global_position = Vector3(0,0.1,43)
+    player.global_position = Vector3(6,0.08,9)
+    player.set_lobby_showcase(true)
     player.health_changed.connect(_on_health_changed)
     player.ammo_changed.connect(_on_ammo_changed)
     player.player_killed.connect(_on_player_killed)
@@ -117,6 +121,93 @@ func _add_key_action(action: String,key: Key) -> void:
         event.keycode = key
         InputMap.action_add_event(action,event)
 
+func _create_lobby_stage() -> void:
+    if is_instance_valid(_lobby_stage):
+        _lobby_stage.queue_free()
+    _lobby_stage = Node3D.new()
+    _lobby_stage.name = "HAX_3D_LOBBY_SHOWCASE"
+    add_child(_lobby_stage)
+    _lobby_stage.position = Vector3(6.0,0.0,9.0)
+    var platform_material := StandardMaterial3D.new()
+    platform_material.albedo_color = Color("#111722")
+    platform_material.metallic = 0.72
+    platform_material.roughness = 0.32
+    var platform := MeshInstance3D.new()
+    var disc := CylinderMesh.new()
+    disc.top_radius = 3.2
+    disc.bottom_radius = 3.35
+    disc.height = 0.26
+    disc.radial_segments = 64
+    platform.mesh = disc
+    platform.material_override = platform_material
+    platform.position.y = -0.12
+    _lobby_stage.add_child(platform)
+    var ring := MeshInstance3D.new()
+    var ring_mesh := TorusMesh.new()
+    ring_mesh.inner_radius = 2.86
+    ring_mesh.outer_radius = 3.0
+    ring_mesh.rings = 72
+    ring_mesh.ring_segments = 12
+    ring.mesh = ring_mesh
+    var ring_material := StandardMaterial3D.new()
+    ring_material.albedo_color = Color("#ef234a")
+    ring_material.emission_enabled = true
+    ring_material.emission = Color("#e51b43")
+    ring_material.emission_energy_multiplier = 1.9
+    ring.material_override = ring_material
+    ring.position.y = 0.025
+    _lobby_stage.add_child(ring)
+    var back_wall := MeshInstance3D.new()
+    var wall_mesh := BoxMesh.new()
+    wall_mesh.size = Vector3(11.0,6.0,0.5)
+    back_wall.mesh = wall_mesh
+    back_wall.position = Vector3(0.0,3.0,-4.2)
+    back_wall.material_override = platform_material
+    _lobby_stage.add_child(back_wall)
+    for side in [-1.0,1.0]:
+        var pylon := MeshInstance3D.new()
+        var pylon_mesh := BoxMesh.new()
+        pylon_mesh.size = Vector3(0.32,5.4,0.42)
+        pylon.mesh = pylon_mesh
+        var pylon_material := StandardMaterial3D.new()
+        pylon_material.albedo_color = Color("#303b4b")
+        pylon_material.metallic = 0.65
+        pylon_material.roughness = 0.3
+        pylon.material_override = pylon_material
+        pylon.position = Vector3(side*4.3,2.7,-3.8)
+        _lobby_stage.add_child(pylon)
+        var blade := MeshInstance3D.new()
+        var blade_mesh := BoxMesh.new()
+        blade_mesh.size = Vector3(0.12,3.5,0.12)
+        blade.mesh = blade_mesh
+        blade.material_override = ring_material
+        blade.position = Vector3(side*4.3,2.9,-3.5)
+        _lobby_stage.add_child(blade)
+        var spotlight := SpotLight3D.new()
+        spotlight.light_color = Color("#ff3659") if side < 0.0 else Color("#4c91ff")
+        spotlight.light_energy = 3.2
+        spotlight.spot_range = 16.0
+        spotlight.spot_angle = 38.0
+        spotlight.position = Vector3(side*3.7,5.5,1.0)
+        spotlight.rotation_degrees = Vector3(-48,0,0)
+        _lobby_stage.add_child(spotlight)
+    var logo_label := Label3D.new()
+    logo_label.text = "HAX  /  NACAR_22"
+    logo_label.position = Vector3(0,4.8,-3.88)
+    logo_label.font_size = 64
+    logo_label.pixel_size = 0.004
+    logo_label.modulate = Color("#ff647c")
+    logo_label.outline_size = 12
+    logo_label.outline_modulate = Color("#070b13")
+    _lobby_stage.add_child(logo_label)
+    var subtitle := Label3D.new()
+    subtitle.text = "ROYALE DIVISION   •   SEASON 01"
+    subtitle.position = Vector3(0,4.25,-3.86)
+    subtitle.font_size = 25
+    subtitle.pixel_size = 0.004
+    subtitle.modulate = Color("#e2e7ef")
+    _lobby_stage.add_child(subtitle)
+
 func _create_environment() -> void:
     var world := WorldEnvironment.new()
     var env := Environment.new()
@@ -161,6 +252,8 @@ func _start_match(mode_id: String,map_id: String) -> void:
     nav_grid = map_factory.make_navigation_grid()
     _match_time = 0.0
     _loot_check_timer = 0.0
+    if is_instance_valid(_lobby_stage):
+        _lobby_stage.visible = false
     _supply_drop_spawned = false
     _clear_loot()
     _zone_elapsed = 0.0
@@ -172,8 +265,10 @@ func _start_match(mode_id: String,map_id: String) -> void:
     else:
         _remove_safe_zone()
     var player_spawn := Vector3(0,0.1,43)
+    _player_spawn_index = -1
     if current_mode == "battle_royale" and not map_factory.spawn_points.is_empty():
-        player_spawn = map_factory.spawn_points[randi_range(0,map_factory.spawn_points.size()-1)]
+        _player_spawn_index = randi_range(0,map_factory.spawn_points.size()-1)
+        player_spawn = map_factory.spawn_points[_player_spawn_index]
     player.respawn_at(player_spawn)
     player.configure_for_match()
     player.set_controls_enabled(true)
@@ -202,7 +297,10 @@ func _spawn_round_bots() -> void:
     for i in range(count):
         var bot := BotScript.new()
         bot.name = "HAX_BOT_%02d" % (i+1)
-        var spawn: Vector3 = map_factory.spawn_points[(i+1) % map_factory.spawn_points.size()]
+        var spawn_index := (i+1) % map_factory.spawn_points.size()
+        if current_mode == "battle_royale" and _player_spawn_index >= 0 and spawn_index >= _player_spawn_index:
+            spawn_index += 1
+        var spawn: Vector3 = map_factory.spawn_points[spawn_index]
         bot.global_position = spawn + Vector3(randf_range(-2.0,2.0),0,randf_range(-2.0,2.0))
         bot.configure(player,nav_grid,difficulty,Color("#d71939") if i % 2 == 0 else Color("#e8792d"),i % 2,current_mode == "battle_royale")
         bot.eliminated.connect(_on_bot_eliminated)
@@ -502,6 +600,10 @@ func _stop_match() -> void:
     _remove_safe_zone()
     lobby.leave_room()
     lan.close_session()
+    if is_instance_valid(_lobby_stage):
+        _lobby_stage.visible = true
+    player.global_position = Vector3(6,0.08,9)
+    player.set_lobby_showcase(true)
     ui.show_main_menu()
     Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
