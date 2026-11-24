@@ -85,12 +85,15 @@ func _ready() -> void:
     _spring_arm = SpringArm3D.new()
     _spring_arm.name = "ShoulderSpringArm"
     _spring_arm.spring_length = HIP_CAMERA_DISTANCE
+    # Orbit the boom behind the operator while keeping the camera aimed forward.
+    _spring_arm.rotation.y = PI
     _spring_arm.margin = 0.22
     _spring_arm.collision_mask = 1
     _camera_pivot.add_child(_spring_arm)
     _camera = Camera3D.new()
     _camera.name = "ThirdPersonCamera"
     _camera.position = Vector3(0.48, 0.10, 0.0)
+    _camera.rotation.y = PI
     _camera.current = true
     _camera.fov = HIP_FOV
     _spring_arm.add_child(_camera)
@@ -123,6 +126,7 @@ func _build_operator_model() -> void:
                 _model.name = "OperatorMesh"
                 _model.scale = Vector3.ONE * 0.82
                 _operator_root.add_child(_model)
+                _apply_operator_model_tint(_model)
                 _setup_procedural_rig()
                 return
     _model = Node3D.new()
@@ -317,6 +321,8 @@ func _update_camera_pose(delta: float, aiming: bool) -> void:
     if not is_instance_valid(_camera_pivot):
         return
     _camera_pivot.rotation = Vector3(_pitch, _camera_yaw, 0.0)
+    _spring_arm.rotation.y = PI
+    _camera.rotation.y = PI
     _camera_pivot.position.x = lerpf(_camera_pivot.position.x, 0.58 if aiming else 0.0, delta * 8.0)
     _spring_arm.spring_length = lerpf(_spring_arm.spring_length, AIM_CAMERA_DISTANCE if aiming else HIP_CAMERA_DISTANCE, delta * 7.0)
     _camera.position.x = lerpf(_camera.position.x, 0.54 if aiming else 0.42, delta * 8.0)
@@ -352,6 +358,8 @@ func configure_for_match() -> void:
     _pitch = deg_to_rad(-7.0)
     rotation = Vector3.ZERO
     _camera_pivot.rotation = Vector3(_pitch, _camera_yaw, 0.0)
+    _spring_arm.rotation.y = PI
+    _camera.rotation.y = PI
     health_changed.emit(health, armor)
     _emit_ammo()
 
@@ -449,6 +457,23 @@ func _operator_colors() -> Array[Color]:
         if str(skin.id) == current_operator_skin:
             return [skin.color, skin.accent]
     return [Color("#15171d"), Color("#d71936")]
+
+func _apply_operator_model_tint(node: Node) -> void:
+    var palette := _operator_colors()
+    for child in node.get_children():
+        if child is MeshInstance3D and child.mesh != null:
+            var mesh_node := child as MeshInstance3D
+            var part_name := str(mesh_node.name).to_lower()
+            var is_accent := part_name.contains("visor") or part_name.contains("knee") or part_name.contains("latch") or part_name.contains("pack_top") or part_name.contains("eye")
+            for surface in range(mesh_node.mesh.get_surface_count()):
+                var source := mesh_node.get_active_material(surface)
+                var material := StandardMaterial3D.new()
+                if source is StandardMaterial3D:
+                    material = (source as StandardMaterial3D).duplicate() as StandardMaterial3D
+                var target_color: Color = palette[1] if is_accent else palette[0]
+                material.albedo_color = material.albedo_color.lerp(target_color, 0.28 if is_accent else 0.18)
+                mesh_node.set_surface_override_material(surface,material)
+        _apply_operator_model_tint(child)
 
 func try_fire() -> void:
     if not controls_enabled or is_dead or reload_left > 0.0 or fire_cooldown > 0.0:
