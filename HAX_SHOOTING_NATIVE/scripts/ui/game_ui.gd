@@ -387,8 +387,10 @@ func set_room_status(message: String) -> void:
         _room_status.text = message
 
 func show_main_menu() -> void:
+    if is_instance_valid(_hud):
+        _hud.queue_free()
+        _hud = null
     _build_main_menu()
-    show_game_hud(false)
 
 func show_game_hud(show_mobile := true) -> void:
     _clear_page()
