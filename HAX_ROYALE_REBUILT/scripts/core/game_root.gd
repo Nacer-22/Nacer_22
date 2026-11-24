@@ -604,6 +604,10 @@ func _stop_match() -> void:
         _lobby_stage.visible = true
     player.global_position = Vector3(6,0.08,9)
     player.set_lobby_showcase(true)
+    if is_instance_valid(_lobby_stage):
+        _lobby_stage.visible = true
+    player.global_position = Vector3(6,0.08,9)
+    player.set_lobby_showcase(true)
     ui.show_main_menu()
     Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
