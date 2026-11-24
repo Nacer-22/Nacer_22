@@ -286,9 +286,11 @@ func _spawn_round_bots() -> void:
     _clear_bots()
     var mode := GameData.get_mode(current_mode)
     var count := int(mode.get("bots",8))
-    if current_mode == "zombies":
+    if lobby.room_code != "":
+        count = 0
+    if current_mode == "zombies" and lobby.room_code == "":
         count = mini(5 + round_number * 2,22)
-    elif current_mode == "battle_royale":
+    elif current_mode == "battle_royale" and lobby.room_code == "":
         count = 15
     elif current_mode == "training":
         count = 4
