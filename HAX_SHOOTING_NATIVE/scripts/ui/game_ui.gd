@@ -725,7 +725,7 @@ func show_match_result(title_text: String, subtitle: String, kills: int, placeme
     sub.add_theme_font_size_override("font_size",17)
     stack.add_child(sub)
     var stats := Label.new()
-    stats.text = "PLACEMENT  %s\nELIMINATIONS  %d\nRANK POINTS  %+d" % [placement,kills,rank_reward]
+    stats.text = "PLACEMENT  %s\nELIMINATIONS  %d\nRANK POINTS  %d" % [placement,kills,rank_reward]
     stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     stats.add_theme_font_size_override("font_size",22)
     stats.add_theme_color_override("font_color",Color("#f3e6d6"))
@@ -811,8 +811,7 @@ func _build_mobile_controls() -> void:
     layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     layer.mouse_filter = Control.MOUSE_FILTER_PASS
     _hud.add_child(layer)
-    var touch := Control.new()
-    touch.set_script(load("res://scripts/ui/touch_controller.gd"))
+    var touch = load("res://scripts/ui/touch_controller.gd").new()
     touch.move_changed.connect(mobile_move_changed.emit)
     touch.look_changed.connect(mobile_look_changed.emit)
     layer.add_child(touch)
