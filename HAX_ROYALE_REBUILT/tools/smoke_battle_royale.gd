@@ -6,7 +6,7 @@ func _initialize() -> void:
 func _run_smoke() -> void:
     var packed := load("res://scenes/main.tscn") as PackedScene
     assert(packed != null, "Main scene could not be loaded")
-    var game := packed.instantiate()
+    var game = packed.instantiate()
     root.add_child(game)
     await process_frame
     await process_frame
