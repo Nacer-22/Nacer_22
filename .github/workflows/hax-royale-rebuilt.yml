@@ -36,6 +36,11 @@ jobs:
           test -s assets/textures/hires/concrete_albedo_2k.jpg
           echo "Generated game content:"
           du -sh assets/models assets/audio assets/textures
+      - name: Run authoritative room server unit tests
+        working-directory: HAX_ROYALE_REBUILT/server
+        run: |
+          npm install --no-audit --no-fund
+          npm test
       - name: Install Android SDK
         uses: android-actions/setup-android@v4
         with:
