@@ -23,6 +23,7 @@ var max_health := 100.0
 var health := 100.0
 var armor := 75.0
 var is_dead := false
+var team_id := 0
 var controls_enabled := false
 var lobby_showcase := false
 var current_weapon_index := 0
@@ -519,6 +520,8 @@ func try_fire() -> void:
             var collider: Object = result.collider
             if collider is Area3D:
                 var victim := collider.get_parent() as Node
+                if victim != null and victim.is_in_group("bots") and int(victim.get("team_id")) == team_id:
+                    continue
                 if victim != null and victim.has_method("apply_damage"):
                     var is_head := str(collider.get_meta("hit_zone", "body")) == "head"
                     var damage := float(weapon_data.damage)
@@ -558,7 +561,7 @@ func _get_assisted_direction() -> Vector3:
     var best_dot := cos(deg_to_rad(cone_degrees))
     var best_point := Vector3.ZERO
     for bot in get_tree().get_nodes_in_group("bots"):
-        if not is_instance_valid(bot) or bot.is_dead:
+        if not is_instance_valid(bot) or bot.is_dead or int(bot.get("team_id")) == team_id:
             continue
         var point: Vector3 = bot.get_head_position() if bot.has_method("get_head_position") else bot.global_position + Vector3.UP * 1.45
         var to_target := point - _camera.global_position
