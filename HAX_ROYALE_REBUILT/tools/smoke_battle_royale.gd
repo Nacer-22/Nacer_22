@@ -65,9 +65,9 @@ func _run_smoke() -> void:
     for bot in game._bots:
         team_counts[bot.team_id] = int(team_counts.get(bot.team_id, 0)) + 1
         if not _check(bot.target != null, "Bot did not select a target"):
-        return
+            return
         if not _check(bot.global_position.distance_to(game.player.global_position) > 2.0, "Bot spawned on top of the player"):
-        return
+            return
     if not _check(team_counts.size() >= 2, "Battle Royale AI squads were not created"):
         return
 
