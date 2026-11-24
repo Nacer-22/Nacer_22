@@ -254,6 +254,59 @@ func _on_player_killed() -> void:
         _respawn_pending = false
     )
 
+
+func _create_safe_zone() -> void:
+    _remove_safe_zone()
+    var zone := Node3D.new()
+    zone.name = "HAX_SAFE_ZONE"
+    zone.position = _zone_center + Vector3(0,0.18,0)
+    add_child(zone)
+    var ring := MeshInstance3D.new()
+    var torus := TorusMesh.new()
+    torus.inner_radius = 0.985
+    torus.outer_radius = 1.0
+    torus.rings = 72
+    torus.ring_segments = 10
+    ring.mesh = torus
+    var material := StandardMaterial3D.new()
+    material.albedo_color = Color(1.0,0.12,0.23,0.78)
+    material.emission_enabled = true
+    material.emission = Color("#ff234b")
+    material.emission_energy_multiplier = 2.0
+    material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+    ring.material_override = material
+    zone.add_child(ring)
+    _zone_visual = ring
+    _update_zone_visual()
+
+func _remove_safe_zone() -> void:
+    var zone := get_node_or_null("HAX_SAFE_ZONE")
+    if zone:
+        zone.queue_free()
+    _zone_visual = null
+
+func _update_zone_visual() -> void:
+    if is_instance_valid(_zone_visual):
+        _zone_visual.scale = Vector3(_zone_radius,1.0,_zone_radius)
+
+func _update_battle_royale(delta: float) -> void:
+    _zone_elapsed += delta
+    _zone_tick += delta
+    if _zone_elapsed > 24.0 and _zone_radius > 18.0:
+        var phase := floor((_zone_elapsed - 24.0) / 22.0)
+        var target_radius := maxf(18.0, 88.0 - phase * 10.0)
+        if target_radius < _zone_radius:
+            _zone_radius = target_radius
+            _update_zone_visual()
+            ui.add_kill_feed("SAFE ZONE SHRINKING — MOVE TO THE RED RING")
+    if _zone_tick >= 1.0:
+        _zone_tick = 0.0
+        if player.global_position.distance_to(_zone_center) > _zone_radius:
+            player.take_damage(6.0,"STORM")
+        for bot in _bots:
+            if is_instance_valid(bot) and bot.global_position.distance_to(_zone_center) > _zone_radius:
+                bot.apply_damage(7.0,"zone")
+
 func _on_health_changed(_health: float,_armor: float) -> void:
     pass
 
