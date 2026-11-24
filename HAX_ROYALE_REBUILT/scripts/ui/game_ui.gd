@@ -52,6 +52,7 @@ func _ready() -> void:
     rank_points = int(_profile.get_value("profile","rank_points",rank_points))
     season_xp = int(_profile.get_value("profile","season_xp",season_xp))
     player_level = int(_profile.get_value("profile","level",player_level))
+    _squad_size = str(_profile.get_value("profile","squad_size","SOLO"))
     _owned_operator_skins = _profile.get_value("inventory","operators",_owned_operator_skins)
     _owned_weapon_skins = _profile.get_value("inventory","weapons",_owned_weapon_skins)
     _selected_operator_skin = str(_profile.get_value("inventory","selected_operator",_selected_operator_skin))
@@ -69,6 +70,7 @@ func save_profile() -> void:
     _profile.set_value("profile","rank_points",rank_points)
     _profile.set_value("profile","season_xp",season_xp)
     _profile.set_value("profile","level",player_level)
+    _profile.set_value("profile","squad_size",_squad_size)
     _profile.set_value("inventory","operators",_owned_operator_skins)
     _profile.set_value("inventory","weapons",_owned_weapon_skins)
     _profile.set_value("inventory","selected_operator",_selected_operator_skin)
@@ -439,6 +441,26 @@ func _show_mode_select() -> void:
     map_pick.select(selected_index)
     map_pick.item_selected.connect(func(index: int): selected_map = str(GameData.MAPS[index].id))
     map_row.add_child(map_pick)
+    if selected_mode == "battle_royale":
+        var squad_row := HBoxContainer.new()
+        box.add_child(squad_row)
+        var squad_label := Label.new()
+        squad_label.text = "SQUAD SIZE"
+        squad_label.custom_minimum_size.x = 120
+        squad_label.add_theme_color_override("font_color",Color("#ff647a"))
+        squad_row.add_child(squad_label)
+        var squad_pick := OptionButton.new()
+        squad_pick.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        squad_pick.add_item("SOLO  •  1 OPERATOR")
+        squad_pick.add_item("DUO  •  2 OPERATORS")
+        squad_pick.add_item("SQUAD  •  4 OPERATORS")
+        squad_pick.select(0 if _squad_size == "SOLO" else (1 if _squad_size == "DUO" else 2))
+        squad_pick.item_selected.connect(func(index: int):
+            _squad_size = ["SOLO","DUO","SQUAD"][index]
+            setting_changed.emit("squad_size",_squad_size)
+            save_profile()
+        )
+        squad_row.add_child(squad_pick)
     var deploy := Button.new()
     deploy.text = "▶  DEPLOY INTO BATTLE"
     deploy.custom_minimum_size.y = 58
