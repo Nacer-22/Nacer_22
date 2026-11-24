@@ -57,16 +57,17 @@ jobs:
       - name: Install Android export templates
         shell: bash
         run: |
-          python -m pip install --no-cache-dir remotezip
+          URL="https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz"
+          curl -fL --retry 8 --retry-delay 5 --retry-all-errors "$URL" -o "$RUNNER_TEMP/godot-templates.tpz"
           python - <<'PY'
           from pathlib import Path
-          from remotezip import RemoteZip
-          url = "https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz"
+          from zipfile import ZipFile
+          archive_path = Path(__import__("os").environ["RUNNER_TEMP"]) / "godot-templates.tpz"
           dest = Path.home() / ".local/share/godot/export_templates/4.7.2.stable"
           dest.mkdir(parents=True, exist_ok=True)
           wanted = {"android_debug.apk", "android_release.apk", "version.txt"}
           found = set()
-          with RemoteZip(url, timeout=180) as archive:
+          with ZipFile(archive_path) as archive:
               for name in archive.namelist():
                   base = Path(name).name
                   if base in wanted and base not in found:
@@ -75,7 +76,7 @@ jobs:
                           raise RuntimeError("empty export template: " + name)
                       (dest / base).write_bytes(data)
                       found.add(base)
-                      print("Fetched", name, len(data))
+                      print("Extracted", name, len(data))
           if found != wanted:
               raise RuntimeError("Missing Android templates: " + str(wanted-found))
           PY
