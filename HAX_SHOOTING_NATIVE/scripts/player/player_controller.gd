@@ -155,7 +155,7 @@ func _make_joint_pivot(mesh_names: Array, joint: Vector3, pivot_name: String) ->
     pivot.position = joint
     _model.add_child(pivot)
     for mesh_name in mesh_names:
-        var part := _model.find_child(str(mesh_name), true, false) as MeshInstance3D
+        var part := _find_operator_mesh(str(mesh_name))
         if part == null:
             continue
         var old_global := part.global_transform
@@ -164,6 +164,16 @@ func _make_joint_pivot(mesh_names: Array, joint: Vector3, pivot_name: String) ->
         pivot.add_child(part)
         part.transform = pivot.global_transform.affine_inverse() * old_global
     return pivot
+
+
+func _find_operator_mesh(part_name: String) -> MeshInstance3D:
+    var exact := _model.find_child(part_name, true, false) as MeshInstance3D
+    if exact != null:
+        return exact
+    for node in _model.find_children("*", "MeshInstance3D", true, false):
+        if node.name == part_name or str(node.name).contains(part_name):
+            return node as MeshInstance3D
+    return null
 
 func _build_fallback_operator() -> void:
     var colors := _operator_colors()
