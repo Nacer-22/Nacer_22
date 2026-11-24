@@ -282,16 +282,27 @@ func _on_menu_action(action: String) -> void:
 func _new_page(title: String, subtitle := "") -> VBoxContainer:
     page = title.to_lower().replace(" ","_")
     _clear_page()
+    var page_root := Control.new()
+    page_root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    _root.add_child(page_root)
+    _main_menu = page_root
+    var backdrop := TextureRect.new()
+    backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    var art_path := "res://assets/title_art.png" if ResourceLoader.exists("res://assets/title_art.png") else "res://assets/title_art.svg"
+    backdrop.texture = load(art_path)
+    backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+    backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+    page_root.add_child(backdrop)
     var shade := ColorRect.new()
     shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    shade.color = Color(0.012,0.014,0.02,0.96)
-    _root.add_child(shade)
-    _main_menu = shade
+    shade.color = Color(0.005,0.008,0.018,0.82)
+    shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    page_root.add_child(shade)
     var center := CenterContainer.new()
     center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    shade.add_child(center)
+    page_root.add_child(center)
     var panel := PanelContainer.new()
-    panel.custom_minimum_size = Vector2(700,560)
+    panel.custom_minimum_size = Vector2(1000,640)
     var panel_style := StyleBoxFlat.new()
     panel_style.bg_color = Color("#111720")
     panel_style.border_color = Color("#d51b3d")
