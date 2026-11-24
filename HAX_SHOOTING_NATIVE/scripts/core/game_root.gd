@@ -155,7 +155,19 @@ func _start_match(mode_id: String,map_id: String) -> void:
     _respawn_pending = false
     map_factory.build_map(current_map)
     nav_grid = map_factory.make_navigation_grid()
-    player.respawn_at(Vector3(0,0.1,43))
+    _match_time = 0.0
+    _zone_elapsed = 0.0
+    _zone_tick = 0.0
+    _zone_center = Vector3(randf_range(-8.0,8.0),0.0,randf_range(-8.0,8.0))
+    _zone_radius = 88.0
+    if current_mode == "battle_royale":
+        _create_safe_zone()
+    else:
+        _remove_safe_zone()
+    var player_spawn := Vector3(0,0.1,43)
+    if current_mode == "battle_royale" and not map_factory.spawn_points.is_empty():
+        player_spawn = map_factory.spawn_points[randi_range(0,map_factory.spawn_points.size()-1)]
+    player.respawn_at(player_spawn)
     player.configure_for_match()
     player.set_controls_enabled(true)
     ui.show_game_hud(OS.has_feature("mobile"))
@@ -170,7 +182,7 @@ func _spawn_round_bots() -> void:
     if current_mode == "zombies":
         count = mini(5 + round_number * 2,22)
     elif current_mode == "battle_royale":
-        count = mini(10 + round_number,18)
+        count = 15
     elif current_mode == "training":
         count = 4
     var difficulty := "normal"
