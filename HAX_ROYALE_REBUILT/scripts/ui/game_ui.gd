@@ -758,7 +758,7 @@ func show_match_result(title_text: String, subtitle: String, kills: int, placeme
     home.pressed.connect(func():
         if is_instance_valid(overlay):
             overlay.queue_free()
-        show_main_menu()
+        start_requested.emit("__leave__","")
     )
     stack.add_child(home)
 
