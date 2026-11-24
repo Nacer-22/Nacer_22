@@ -13,7 +13,7 @@ function finiteVector(v) {
   return v && Number.isFinite(v.x) && Number.isFinite(v.y) && Number.isFinite(v.z);
 }
 
-function clampPosition(p, limit = 58) {
+function clampPosition(p, limit = 100) {
   return {
     x: Math.max(-limit, Math.min(limit, p.x)),
     y: Math.max(0, Math.min(4, p.y)),
