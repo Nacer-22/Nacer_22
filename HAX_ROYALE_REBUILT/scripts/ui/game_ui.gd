@@ -114,15 +114,10 @@ func _build_main_menu() -> void:
     root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     _root.add_child(root)
     _main_menu = root
-    var bg := TextureRect.new()
-    bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    bg.texture = load("res://assets/title_art.svg")
-    bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-    bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-    root.add_child(bg)
+    # Leave the live 3D operator showcase visible behind the lobby UI.
     var shade := ColorRect.new()
     shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    shade.color = Color(0.005,0.008,0.02,0.25)
+    shade.color = Color(0.008,0.012,0.022,0.18)
     shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
     root.add_child(shade)
 
@@ -498,10 +493,16 @@ func _show_store() -> void:
     var balance := Label.new()
     balance.text = "YOUR CREDITS: %d" % credits
     box.add_child(balance)
+    var operator_heading := Label.new()
+    operator_heading.text = "OPERATOR OUTFITS"
+    operator_heading.add_theme_color_override("font_color",Color("#ff647a"))
+    box.add_child(operator_heading)
     for skin in GameData.OPERATOR_SKINS:
         var b := Button.new()
-        b.text = "UNLOCK %s  —  %d C" % [skin.name,int(skin.cost)]
-        _style_button(b)
+        var owned := _owned_operator_skins.has(str(skin.id))
+        b.text = ("✓ OWNED  " if owned else "UNLOCK  ") + "%s  —  %d C" % [skin.name,int(skin.cost)]
+        _style_button(b,owned)
+        b.disabled = owned
         b.pressed.connect(func():
             if _owned_operator_skins.has(str(skin.id)):
                 return
@@ -512,6 +513,26 @@ func _show_store() -> void:
                 _show_store()
         )
         box.add_child(b)
+    var weapon_heading := Label.new()
+    weapon_heading.text = "WEAPON FINISHES"
+    weapon_heading.add_theme_color_override("font_color",Color("#ff647a"))
+    box.add_child(weapon_heading)
+    for skin in GameData.WEAPON_SKINS:
+        var wb := Button.new()
+        var weapon_owned := _owned_weapon_skins.has(str(skin.id))
+        wb.text = ("✓ OWNED  " if weapon_owned else "UNLOCK  ") + "%s  —  %d C" % [skin.name,int(skin.cost)]
+        _style_button(wb,weapon_owned)
+        wb.disabled = weapon_owned
+        wb.pressed.connect(func():
+            if _owned_weapon_skins.has(str(skin.id)):
+                return
+            if credits >= int(skin.cost):
+                credits -= int(skin.cost)
+                _owned_weapon_skins.append(str(skin.id))
+                save_profile()
+                _show_store()
+        )
+        box.add_child(wb)
     _add_back(box)
 
 func _show_settings() -> void:
