@@ -6,7 +6,7 @@ const { WEAPONS, validateMovement, resolveShot } = require('./game_rules');
 
 const PORT = Number(process.env.PORT || 8080);
 const MAX_ROOMS = 80;
-const MAX_PLAYERS = 10;
+const MAX_PLAYERS = 16;
 const SNAPSHOT_MS = 75;
 const rooms = new Map();
 const clients = new Map();
@@ -79,7 +79,7 @@ function handle(client,raw) {
   switch(m.type) {
     case 'hello':
       client.name=safeName(m.name);
-      send(client.socket,{type:'server_ready',id:client.id,name:client.name,version:'0.3.0-alpha'});
+      send(client.socket,{type:'server_ready',id:client.id,name:client.name,version:'1.0.0'});
       break;
     case 'create_room': {
       if(rooms.size>=MAX_ROOMS) return send(client.socket,{type:'error',message:'ROOM CAPACITY REACHED'});
