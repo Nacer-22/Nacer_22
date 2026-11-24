@@ -1,4 +1,5 @@
 name: HAX SHOOTING FPS Remaster Android APK
+# Updated for mobile touch-control bundle
 on:
   push:
     branches: [hax-shooting-remaster]
