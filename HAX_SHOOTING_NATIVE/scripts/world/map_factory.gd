@@ -13,7 +13,7 @@ func build_map(id: String) -> void:
     obstacles.clear()
     spawn_points.clear()
     _create_materials()
-    _add_box(Vector3(0,-0.65,0),Vector3(120,1.2,120),_materials.floor)
+    _add_box(Vector3(0,-0.65,0),Vector3(120,1.2,120),_materials.floor,false)
     _add_perimeter()
     match map_id:
         "dust_front": _build_dust()
