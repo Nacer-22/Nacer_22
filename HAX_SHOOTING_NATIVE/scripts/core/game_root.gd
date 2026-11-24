@@ -204,7 +204,7 @@ func _spawn_round_bots() -> void:
         bot.name = "HAX_BOT_%02d" % (i+1)
         var spawn: Vector3 = map_factory.spawn_points[(i+1) % map_factory.spawn_points.size()]
         bot.global_position = spawn + Vector3(randf_range(-2.0,2.0),0,randf_range(-2.0,2.0))
-        bot.configure(player,nav_grid,difficulty,Color("#d71939") if i % 2 == 0 else Color("#e8792d"))
+        bot.configure(player,nav_grid,difficulty,Color("#d71939") if i % 2 == 0 else Color("#e8792d"),i % 2,current_mode == "battle_royale")
         bot.eliminated.connect(_on_bot_eliminated)
         add_child(bot)
         _bots.append(bot)
@@ -217,7 +217,7 @@ func _clear_bots() -> void:
 
 func _on_bot_eliminated(bot: Node,zone: String) -> void:
     _bots.erase(bot)
-    if zone != "zone":
+    if zone != "zone" and zone != "bot":
         kills += 1
         ui.add_rank_points(18 if current_mode == "ranked" else 8)
         ui.add_kill_feed("%s  ✦  %s" % [bot.name,"HEADSHOT" if zone == "head" else "ELIMINATED"])
@@ -255,6 +255,7 @@ func _on_player_killed() -> void:
         ui.show_match_result("ELIMINATED","YOUR RUN HAS ENDED",kills,"TOP 16",-35)
         _remove_safe_zone()
         _clear_loot()
+        _clear_bots()
         _respawn_pending = false
         return
     ui.add_kill_feed("YOU WERE ELIMINATED — REDEPLOYING")
