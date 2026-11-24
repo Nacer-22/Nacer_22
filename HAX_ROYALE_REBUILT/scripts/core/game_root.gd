@@ -36,6 +36,7 @@ var _loot_check_timer := 0.0
 var _supply_drop_spawned := false
 var _lobby_stage: Node3D
 var _player_spawn_index := -1
+var _squad_team_size := 1
 
 func _ready() -> void:
     _setup_input_map()
@@ -83,6 +84,8 @@ func _ready() -> void:
     player.aim_assist_enabled = bool(ui._settings.aim_assist)
     player.aim_assist_strength = float(ui._settings.aim_strength)
     player.aim_assist_cone = float(ui._settings.aim_cone)
+    _squad_team_size = 1 if ui._squad_size == "SOLO" else (2 if ui._squad_size == "DUO" else 4)
+    player.team_id = 0
     ui.show_main_menu()
 
 func _process(delta: float) -> void:
@@ -302,7 +305,10 @@ func _spawn_round_bots() -> void:
             spawn_index += 1
         var spawn: Vector3 = map_factory.spawn_points[spawn_index]
         bot.global_position = spawn + Vector3(randf_range(-2.0,2.0),0,randf_range(-2.0,2.0))
-        bot.configure(player,nav_grid,difficulty,Color("#d71939") if i % 2 == 0 else Color("#e8792d"),i % 2,current_mode == "battle_royale")
+        var bot_team_id := i % 2
+        if current_mode == "battle_royale":
+            bot_team_id = int((i+1) / float(_squad_team_size))
+        bot.configure(player,nav_grid,difficulty,Color("#d71939") if bot_team_id % 2 == 0 else Color("#e8792d"),bot_team_id,current_mode == "battle_royale")
         bot.eliminated.connect(_on_bot_eliminated)
         add_child(bot)
         _bots.append(bot)
@@ -319,7 +325,14 @@ func _on_bot_eliminated(bot: Node,zone: String) -> void:
         kills += 1
         ui.add_rank_points(18 if current_mode == "ranked" else 8)
         ui.add_kill_feed("%s  ✦  %s" % [bot.name,"HEADSHOT" if zone == "head" else "ELIMINATED"])
-    if _bots.is_empty() and is_match_active and not _round_transition:
+    var match_cleared := _bots.is_empty()
+    if current_mode == "battle_royale":
+        match_cleared = true
+        for remaining in _bots:
+            if is_instance_valid(remaining) and remaining.team_id != player.team_id:
+                match_cleared = false
+                break
+    if match_cleared and is_match_active and not _round_transition:
         _round_transition = true
         if current_mode == "battle_royale":
             is_match_active = false
@@ -630,6 +643,9 @@ func _on_setting_changed(key: String,value: Variant) -> void:
         "weapon_skin": player.apply_weapon_skin(str(value))
         "weapon_next": player.equip_weapon(posmod(player.current_weapon_index + 1,GameData.WEAPONS.size()))
         "crouch": player.set_crouch(not player.crouching)
+        "squad_size":
+            _squad_team_size = 1 if str(value) == "SOLO" else (2 if str(value) == "DUO" else 4)
+            player.team_id = 0
         "graphics": _set_graphics_quality(str(value))
         "volume": AudioServer.set_bus_volume_linear(0,float(value))
 
