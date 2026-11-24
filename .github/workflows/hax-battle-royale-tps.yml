@@ -111,14 +111,20 @@ jobs:
         run: |
           zip -qr build/HAX_BATTLE_ROYALE_SOURCE.zip . -x ".godot/*" "build/*" ".git/*"
           test -s build/HAX_BATTLE_ROYALE_SOURCE.zip
-      - name: Upload HAX TPS APK and source
+      - name: Upload installable APK
         uses: actions/upload-artifact@v4
         with:
-          name: HAX-THIRD-PERSON-BATTLE-ROYALE
+          name: HAX-BATTLE-ROYALE-APK
           path: |
             HAX_SHOOTING_NATIVE/build/HAX_BATTLE_ROYALE.apk
-            HAX_SHOOTING_NATIVE/build/HAX_BATTLE_ROYALE_SOURCE.zip
             HAX_SHOOTING_NATIVE/build/SHA256SUMS.txt
             HAX_SHOOTING_NATIVE/build/BUILD_INFO.txt
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload full source project and assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: HAX-BATTLE-ROYALE-SOURCE
+          path: HAX_SHOOTING_NATIVE/build/HAX_BATTLE_ROYALE_SOURCE.zip
           if-no-files-found: error
           retention-days: 30
