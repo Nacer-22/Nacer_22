@@ -159,7 +159,7 @@ func _repath() -> void:
         path_index = 1
 
 func _nearest_walkable(point: Vector2i) -> Vector2i:
-    var clamped := Vector2i(clampi(point.x, -57, 57), clampi(point.y, -57, 57))
+    var clamped := Vector2i(clampi(point.x, -97, 97), clampi(point.y, -97, 97))
     if navigation_grid.is_in_boundsv(clamped) and not navigation_grid.is_point_solid(clamped):
         return clamped
     for radius in range(1, 8):
