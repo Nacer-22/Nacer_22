@@ -292,7 +292,7 @@ func _spawn_round_bots() -> void:
         count = mini(5 + round_number * 2,22)
     elif current_mode == "battle_royale" and lobby.room_code == "":
         count = 15
-    elif current_mode == "training":
+    elif current_mode == "training" and lobby.room_code == "":
         count = 4
     var difficulty := "normal"
     if round_number >= 5:
