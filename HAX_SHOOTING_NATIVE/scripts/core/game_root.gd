@@ -26,7 +26,7 @@ var _respawn_pending := false
 var _remote_operators: Dictionary = {}
 var _state_send_timer := 0.0
 var _zone_center := Vector3.ZERO
-var _zone_radius := 88.0
+var _zone_radius := 116.0
 var _zone_elapsed := 0.0
 var _zone_tick := 0.0
 var _zone_visual: MeshInstance3D
@@ -87,7 +87,7 @@ func _process(delta: float) -> void:
     var ammo: Dictionary = player.ammo_by_weapon.get(str(player.weapon_data.get("id","hax_ar")),{"mag":0,"reserve":0})
     ui.update_hud(player.health,player.armor,int(ammo.get("mag",0)),int(ammo.get("reserve",0)),round_number,kills,deaths,str(GameData.get_mode(current_mode).name))
     if current_mode == "battle_royale":
-        ui.update_battle_royale(_zone_radius,_zone_elapsed)
+        ui.update_battle_royale(_zone_radius,_zone_elapsed,kills,_bots.size())
     _state_send_timer -= delta
     if _state_send_timer <= 0.0:
         if lobby.room_code != "":
@@ -159,7 +159,7 @@ func _start_match(mode_id: String,map_id: String) -> void:
     _zone_elapsed = 0.0
     _zone_tick = 0.0
     _zone_center = Vector3(randf_range(-8.0,8.0),0.0,randf_range(-8.0,8.0))
-    _zone_radius = 88.0
+    _zone_radius = 116.0
     if current_mode == "battle_royale":
         _create_safe_zone()
     else:
@@ -294,7 +294,7 @@ func _update_battle_royale(delta: float) -> void:
     _zone_tick += delta
     if _zone_elapsed > 24.0 and _zone_radius > 18.0:
         var phase := floor((_zone_elapsed - 24.0) / 22.0)
-        var target_radius := maxf(18.0, 88.0 - phase * 10.0)
+        var target_radius := maxf(18.0, 116.0 - phase * 14.0)
         if target_radius < _zone_radius:
             _zone_radius = target_radius
             _update_zone_visual()
