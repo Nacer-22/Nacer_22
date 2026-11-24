@@ -249,10 +249,11 @@ func _choose_battle_target() -> void:
         return
     var best: Node3D = player_owner
     var best_distance := global_position.distance_to(player_owner.global_position)
-    for other in get_tree().get_nodes_in_group("bots"):
-        if other == self or bool(other.get("is_dead")):
+    for other_node in get_tree().get_nodes_in_group("bots"):
+        var other := other_node as CombatBot
+        if other == null or other == self or other.is_dead:
             continue
-        if int(other.get("team_id")) == team_id:
+        if other.team_id == team_id:
             continue
         var distance := global_position.distance_to(other.global_position)
         if distance < best_distance and distance < 52.0:
