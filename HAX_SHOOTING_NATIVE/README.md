@@ -1,33 +1,32 @@
 # HAX SHOOTING — BY: NACAR_22
 
-Native 3D FPS project built with Godot 4.7.2, plus a separate Node.js WebSocket room service.
+This is the development area on branch `hax-shooting-dev` of the existing Nacer_22 repository. The branch contains the game project metadata, weapon/mode catalog, server-side combat rules and tests, Railway Docker configuration, deployment notes, and a GitHub Actions check for the committed server-rule subset.
 
-## Included gameplay systems
-- First-person 3D player controller with mobile touch controls, sprint, jump, crouch, reload and six weapons.
-- Four procedural arenas and eight match modes.
-- Bot navigation using AStarGrid2D, obstacle re-planning and distance-based combat behavior.
-- Respawn resets player world rotation and camera pitch to prevent the round-transition inversion bug.
-- Separate head/body hit areas; headshots use a weapon-specific damage multiplier.
-- Local cosmetics, weapon selection, credits, profile saving and adjustable aim assist.
-- LAN session scaffold using Godot ENet over UDP, and internet room client using WebSocket JSON.
-- Six original GLB weapon meshes, three operator GLB meshes, PBR texture maps and generated SFX live in the downloadable source package.
+**Important:** the complete native Godot project source tree and binary art/audio assets are delivered separately as the full source ZIP in this conversation. This GitHub branch is not yet a full mirror of every local GDScript and binary asset.
 
-## Build
-Install Godot 4.7.2 and Android export templates. For Android, configure OpenJDK 17 and Android SDK Platform 35, Build Tools 35.0.1, NDK r28b. Open `project.godot`, then Project > Export > Android APK.
+## Native project
+- Godot 4.7.2 project metadata and Android export preset.
+- Six weapon definitions, eight mode definitions, four maps and cosmetic catalog in `scripts/data/game_data.gd`.
+- Android APK package ID: `com.nacar.haxshooting`.
+- Full source ZIP includes GDScript gameplay files, scenes, GLB models, PBR maps, WAV effects, tools and docs.
 
-## Room service
+## Room server
+- Node.js 22 / WebSocket (`ws`) service.
+- Room, movement, shot, head/body hit and fire-rate rules.
+- Seven Node unit tests.
+- Dockerfile and Railway service config in `server/`.
+
+Run local server rules:
 ```sh
 cd server
 npm install
 npm test
-npm start
 ```
-Set `HAX_SERVER_URL` to the deployed WebSocket endpoint ending in `/ws`.
 
-## Validation
-The server rule suite currently has 7 passing Node tests for movement bounds/speed, ray-sphere hit tests, Godot -Z yaw convention, headshot multiplier and fire-rate constraints.
+## CI
+The repository workflow currently validates the server-rule subset committed to this branch. It does not claim that the full Godot scene has been built by GitHub Actions.
 
-## Alpha status / honest limitations
-This is an original playable development foundation, not yet a commercial AAA game. The GLB operators are custom static meshes, not fully rigged/mocap characters. The server is in-memory, single-process and not production-ready for ranked play; line-of-sight, persistent accounts/inventory, anti-cheat telemetry, matchmaking scale and load testing remain. LAN uses Wi-Fi/Ethernet ENet; Bluetooth is not implemented. No APK was built or device-tested in this environment.
+## Status / limitations
+This is an Alpha development foundation, not a finished commercial AAA game. The included operator GLB meshes are static and not skeletal animated rigs. The room service is in-memory and is not production-ready for ranked play. LAN movement sync is an early prototype, Bluetooth is not implemented, and the online server has not been deployed. No Android APK was built or device-tested in this environment.
 
-Full project archive and all art/audio/binary assets are delivered separately in the conversation's source ZIP.
+Brand: **HAX SHOOTING — BY: NACAR_22**.
