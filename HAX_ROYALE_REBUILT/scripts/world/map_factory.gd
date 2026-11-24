@@ -174,6 +174,16 @@ func _build_island() -> void:
     _add_box(Vector3(0,0.35,-12),Vector3(18,0.7,3),_materials.metal)
     _add_box(Vector3(0,0.35,16),Vector3(18,0.7,3),_materials.metal)
 
+func _add_banner(pos: Vector3, size: Vector3) -> void:
+    var pole_height := maxf(3.0,size.y)
+    _add_box(pos + Vector3(-size.x*0.5,0,0),Vector3(0.22,pole_height,0.22),_materials.metal)
+    _add_box(pos + Vector3(size.x*0.5,0,0),Vector3(0.22,pole_height,0.22),_materials.metal)
+    _add_box(pos + Vector3(0,pole_height*0.34,0),Vector3(size.x,0.16,0.18),_materials.metal)
+    var banner_material := _mat(Color("#a70f2d"),0.72,0.18)
+    _add_box(pos + Vector3(0,pole_height*0.66,0.04),Vector3(size.x*0.92,pole_height*0.48,0.10),banner_material,false)
+    var trim := _mat(Color("#ee3154"),0.45,0.25,Color("#8e102c"))
+    _add_box(pos + Vector3(0,pole_height*0.42,0.10),Vector3(size.x*0.92,0.12,0.06),trim,false)
+
 func _add_tree(pos: Vector3, scale_value: float) -> void:
     var tree := Node3D.new()
     tree.position = pos
@@ -200,8 +210,9 @@ func _add_tree(pos: Vector3, scale_value: float) -> void:
     obstacles.append({"center":pos+Vector3(0,1.6,0),"size":Vector3(0.65,3.2,0.65)})
     for i in range(3):
         var leaves := MeshInstance3D.new()
-        var cone := ConeMesh.new()
-        cone.radius = 1.55 - float(i) * 0.24
+        var cone := CylinderMesh.new()
+        cone.top_radius = 0.0
+        cone.bottom_radius = 1.55 - float(i) * 0.24
         cone.height = 3.3 - float(i) * 0.2
         leaves.mesh = cone
         leaves.material_override = _materials.foliage if i % 2 == 0 else _materials.foliage_dark
