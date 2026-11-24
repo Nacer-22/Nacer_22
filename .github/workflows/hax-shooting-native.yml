@@ -66,21 +66,35 @@ jobs:
           ln -sf "$RUNNER_TEMP/godot/Godot_v4.7.2-stable_linux.x86_64" "$RUNNER_TEMP/godot/godot"
           echo "$RUNNER_TEMP/godot" >> "$GITHUB_PATH"
           "$RUNNER_TEMP/godot/Godot_v4.7.2-stable_linux.x86_64" --version
-      - name: Install matching Godot export templates
+      - name: Install only required Godot Android export templates
         shell: bash
         run: |
-          curl -fL --retry 3 "https://downloads.godotengine.org/?flavor=stable&platform=templates&slug=export_templates.tpz&version=4.7.2" -o export_templates.tpz
-          mkdir -p "$RUNNER_TEMP/godot-templates"
-          unzip -q export_templates.tpz -d "$RUNNER_TEMP/godot-templates"
-          DEST="$HOME/.local/share/godot/export_templates/4.7.2.stable"
-          mkdir -p "$DEST"
-          if [ -d "$RUNNER_TEMP/godot-templates/templates" ]; then
-            cp -a "$RUNNER_TEMP/godot-templates/templates/." "$DEST/"
-          else
-            cp -a "$RUNNER_TEMP/godot-templates/." "$DEST/"
-          fi
-          if [ -f "$RUNNER_TEMP/godot-templates/version.txt" ]; then cp "$RUNNER_TEMP/godot-templates/version.txt" "$DEST/version.txt"; fi
-          ls -lh "$DEST"
+          python -m pip install --no-cache-dir remotezip
+          python - <<'PY'
+          from pathlib import Path
+          from remotezip import RemoteZip
+
+          url = "https://downloads.godotengine.org/?flavor=stable&platform=templates&slug=export_templates.tpz&version=4.7.2"
+          destination = Path.home() / ".local/share/godot/export_templates/4.7.2.stable"
+          destination.mkdir(parents=True, exist_ok=True)
+          wanted = {"android_debug.apk", "android_release.apk", "version.txt"}
+          extracted = set()
+          with RemoteZip(url, timeout=180) as archive:
+              for name in archive.namelist():
+                  base = Path(name).name
+                  if base not in wanted or base in extracted:
+                      continue
+                  data = archive.read(name)
+                  if not data:
+                      raise RuntimeError(f"Empty Godot template: {name}")
+                  (destination / base).write_bytes(data)
+                  extracted.add(base)
+                  print(f"Fetched {name}: {len(data):,} bytes")
+          missing = wanted - extracted
+          if missing:
+              raise RuntimeError(f"Missing Android export template entries: {sorted(missing)}")
+          PY
+          ls -lh "$HOME/.local/share/godot/export_templates/4.7.2.stable"
       - name: Import and parse native project
         working-directory: HAX_SHOOTING_NATIVE
         run: |
