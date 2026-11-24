@@ -354,6 +354,8 @@ func _on_setting_changed(key: String,value: Variant) -> void:
                 lobby.send_reload()
         "operator_skin": player.apply_operator_skin(str(value))
         "weapon_skin": player.apply_weapon_skin(str(value))
+        "weapon_next": player.equip_weapon(posmod(player.current_weapon_index + 1,GameData.WEAPONS.size()))
+        "crouch": player.set_crouch(not player.crouching)
         "graphics": _set_graphics_quality(str(value))
         "volume": AudioServer.set_bus_volume_linear(0,float(value))
 
